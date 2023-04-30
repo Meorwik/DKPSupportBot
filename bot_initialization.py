@@ -10,7 +10,7 @@ import os
 from db_api import PostgresDataBaseManager, db_connection_config, DataConvertor, DB_USERS_COLUMNS
 import texts
 
-TOKEN = '1821787822:AAEFr22t2_sfYU1Ms-IMLooSMp_5BnOcYEk'
+TOKEN = '6164608296:AAFVsSJBw9l_0XEaD-aSW9pi77hv-vXEa44'
 
 storage = MemoryStorage()
 
