@@ -9,6 +9,7 @@ import logging
 import os
 from db_api import PostgresDataBaseManager, db_connection_config, DataConvertor, DB_USERS_COLUMNS
 import texts
+import io
 
 TOKEN = '6164608296:AAFVsSJBw9l_0XEaD-aSW9pi77hv-vXEa44'
 
@@ -107,10 +108,11 @@ async def test(callback_query: types.CallbackQuery):
 
 @dp.message_handler(text="Всё о доконтактной профилактике ВИЧ 📚")
 async def test(callback_query: types.CallbackQuery):
-    await bot.send_document(callback_query.from_user.id,
-                            document='BQACAgIAAxkBAAMlY_roJNtLcVpUxVB8_C9yIAABWN95AAJrJQACWGnhSWbkQo1-vESkLgQ')
-    await bot.send_document(callback_query.from_user.id,
-                            document='BQACAgIAAxkBAAMpY_roMDgFM8IvJvtaoC2fL8eE8iIAAiglAAJGoThKyKctJFsHBBkuBA')
+    with io.open("Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
+        await bot.send_document(callback_query.from_user.id, document=ru_document)
+
+    with io.open("КДП дегеніміз не.pdf", "rb") as kz_document:
+        await bot.send_document(callback_query.from_user.id, document=kz_document)
 
 
 @dp.message_handler(text="Заказать бесплатный тест на ВИЧ 💊")
