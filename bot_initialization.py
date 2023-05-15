@@ -3,12 +3,10 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-from aiogram.types import ReplyKeyboardRemove, ReplyKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton, \
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, \
     InlineKeyboardMarkup, InlineKeyboardButton
 import logging
-import os
 from db_api import PostgresDataBaseManager, db_connection_config, DataConvertor, DB_USERS_COLUMNS
-import texts
 import io
 
 TOKEN = '6164608296:AAFVsSJBw9l_0XEaD-aSW9pi77hv-vXEa44'
@@ -108,12 +106,30 @@ async def test(callback_query: types.CallbackQuery):
 
 @dp.message_handler(text="Всё о доконтактной профилактике ВИЧ 📚")
 async def test(callback_query: types.CallbackQuery):
-    with io.open("Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
-        await bot.send_document(callback_query.from_user.id, document=ru_document)
+    ask_language = "Выберите язык, чтобы продолжить:"
+    kz_button = InlineKeyboardButton("Қазақша", callback_data="KZ")
+    ru_button = InlineKeyboardButton("Русский", callback_data="RU")
 
-    with io.open("КДП дегеніміз не.pdf", "rb") as kz_document:
-        await bot.send_document(callback_query.from_user.id, document=kz_document)
+    kb = InlineKeyboardMarkup().add(kz_button, ru_button)
 
+    await bot.send_message(text=ask_language, reply_markup=kb, chat_id=callback_query.from_user.id)
+
+
+@dp.callback_query_handler(lambda call: call.data == "RU" or call.data == "KZ")
+async def send_document(callback_query: types.CallbackQuery):
+    if callback_query.data == "RU":
+        await callback_query.message.edit_text("Пару секунд, загружаю информацию...")
+
+        with io.open("Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
+            await bot.send_document(callback_query.from_user.id, document=ru_document)
+
+    elif callback_query.data == "KZ":
+        await callback_query.message.edit_text("Бірнеше секунд, ақпаратты жүктеп салу...")
+
+        with io.open("КДП дегеніміз не.pdf", "rb") as kz_document:
+            await bot.send_document(callback_query.from_user.id, document=kz_document)
+
+    await callback_query.message.delete()
 
 @dp.message_handler(text="Заказать бесплатный тест на ВИЧ 💊")
 async def files(message: types.Message):

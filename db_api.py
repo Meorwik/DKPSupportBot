@@ -1,5 +1,5 @@
-import psycopg2
 from pandas import DataFrame
+from psycopg2 import connect
 
 db_name = "railway"
 db_user = "postgres"
@@ -8,7 +8,6 @@ db_host = "containers-us-west-48.railway.app"
 db_port = "7276"
 
 DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name"]
-LETTERS = "ABCDE"
 
 db_connection_config = {
     "dbname": db_name,
@@ -37,7 +36,7 @@ class DataBaseManager:
         self.cursor = None
 
     def set_connection(self):
-        self.connection = psycopg2.connect\
+        self.connection = connect\
             (
                 f"""
                     dbname={self.config['dbname']}
