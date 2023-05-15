@@ -3,9 +3,9 @@ from psycopg2 import connect
 
 db_name = "railway"
 db_user = "postgres"
-db_password = "Q9KQON3sAe744O7b0fRD"
-db_host = "containers-us-west-48.railway.app"
-db_port = "7276"
+db_password = "hC1p5ZlaeG5e9Gm1OvmI"
+db_host = "containers-us-west-156.railway.app"
+db_port = "8051"
 
 DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name"]
 
