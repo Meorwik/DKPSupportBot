@@ -9,7 +9,7 @@ import logging
 from db_api import PostgresDataBaseManager, db_connection_config, DataConvertor, DB_USERS_COLUMNS
 import io
 
-TOKEN = '6164608296:AAFVsSJBw9l_0XEaD-aSW9pi77hv-vXEa44'
+TOKEN = '6073444439:AAHkcPtKwycfplfU0VvB48UbNgr8Kw6Knn0'
 
 storage = MemoryStorage()
 
