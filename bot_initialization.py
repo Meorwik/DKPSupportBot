@@ -153,8 +153,8 @@ async def files(message: types.Message):
 
 @dp.message_handler(text="Мы в социальных сетях 🔈")
 async def files(message: types.Message):
-    btn1 = InlineKeyboardButton("Перейти в Facebook", url="https://www.facebook.com/AMECAlmaty")
-    btn2 = InlineKeyboardButton("Перейти в Instagram", url="https://www.instagram.com/amec_almaty/")
+    btn1 = InlineKeyboardButton("Перейти в Facebook", url="https://instagram.com/community__friends")
+    btn2 = InlineKeyboardButton("Перейти в Instagram", url="https://www.facebook.com/groups/communityfriendskz/")
     await message.answer('Facebook и Instagram страница проекта', reply_markup=InlineKeyboardMarkup().add(btn1, btn2))
 
 
