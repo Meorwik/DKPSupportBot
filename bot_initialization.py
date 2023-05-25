@@ -6,16 +6,15 @@ from aiogram.utils import executor
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, \
     InlineKeyboardMarkup, InlineKeyboardButton
 import logging
-import texts
-from db_api import PostgresDataBaseManager, db_connection_config, DataConvertor, DB_USERS_COLUMNS
-import io
+from utils.db_api.db_api import PostgresDataBaseManager, DataConvertor, DB_USERS_COLUMNS
+from utils.db_api.connection_configs import postgres_connection_config
 
-TOKEN = '6073444439:AAHkcPtKwycfplfU0VvB48UbNgr8Kw6Knn0'
+TOKEN = '1821787822:AAEFr22t2_sfYU1Ms-IMLooSMp_5BnOcYEk'
 
 storage = MemoryStorage()
 
 ADMINS = [912239061, 169707453, 598554856, 793520950]
-db = PostgresDataBaseManager(db_connection_config)
+db = PostgresDataBaseManager(postgres_connection_config)
 bot = Bot(TOKEN)
 dp = Dispatcher(bot, storage=storage)
 
@@ -66,7 +65,7 @@ async def start(message: types.Message):
         await message.answer('Ваш профиль не имеет логина. Указать его можно в настройках.\n\n'
                              'Инструкция: https://inetfishki.ru/telegram/kak-uznat-dobavit-pomenyat-login.html#i-4')
     else:
-        db.check_user(message.from_user)
+        await db.check_user(message.from_user)
         start_btn = InlineKeyboardButton('Начать!', callback_data='menu')
         start_kb = InlineKeyboardMarkup(row_width=2).add(start_btn)
         await message.answer('Здравствуйте!\n'
@@ -96,7 +95,7 @@ async def menu(callback_query: types.CallbackQuery):
 
 @dp.message_handler(lambda message: message.from_user.id in ADMINS, text="Получить базу пользователей")
 async def test(callback_query: types.CallbackQuery):
-    file_name = "users"
+    file_name = "commands"
     users_data = db.get_all_users()
     data_convertor = DataConvertor()
     saved_file_path = await data_convertor.convert_to_exel(users_data, DB_USERS_COLUMNS, file_name)
@@ -121,16 +120,17 @@ async def send_document(callback_query: types.CallbackQuery):
     if callback_query.data == "RU":
         await callback_query.message.edit_text("Пару секунд, загружаю информацию...")
 
-        with io.open("Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
+        with io.open("data/info_files/Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
             await bot.send_document(callback_query.from_user.id, document=ru_document)
 
     elif callback_query.data == "KZ":
         await callback_query.message.edit_text("Бірнеше секунд, ақпаратты жүктеп салу...")
 
-        with io.open("КДП дегеніміз не.pdf", "rb") as kz_document:
+        with io.open("data/info_files/КДП дегеніміз не.pdf", "rb") as kz_document:
             await bot.send_document(callback_query.from_user.id, document=kz_document)
 
     await callback_query.message.delete()
+
 
 @dp.message_handler(text="Заказать бесплатный тест на ВИЧ 💊")
 async def files(message: types.Message):
