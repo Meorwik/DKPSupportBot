@@ -355,7 +355,10 @@ question_21_kz_text = "Сіз психоактивті/есірткілерме�
 
 question_1_kz = {
     "question_text": question_1_kz_text,
-    "answers": "___"
+    "answers": {
+        "Иә": 2,
+        "Жоқ": 0,
+    }
 }
 
 question_2_kz = {

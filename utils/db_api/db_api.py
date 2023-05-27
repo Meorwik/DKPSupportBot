@@ -1,12 +1,15 @@
 from pandas import DataFrame
 from psycopg2 import connect
+from datetime import datetime
 
-DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name"]
+DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name", "uik"]
+DB_TESTS_COLUMNS = ["id", "user_id", "test_name", "language", "is_finished", "result", "datetime"]
+DB_LOGS_COLUMNS = ["id", "user_id", "action", "datetime"]
 
 
 class DataConvertor:
     async def convert_to_exel(self, values, columns, file_name):
-        file_path = f"data/info_files/{file_name}.xlsx"
+        file_path = f"data/database_backup/{file_name}.xlsx"
         try:
             data_frame = DataFrame(values, columns=columns)
             data_frame.to_excel(file_path)
@@ -40,17 +43,76 @@ class DataBaseManager:
 
 
 class PostgresDataBaseManager(DataBaseManager):
+    async def create_users_table(self):
+        await self.set_connection()
+        create_users_table_sql = """
+            CREATE TABLE users (
+            "id" serial PRIMARY KEY,
+            "user_id" VARCHAR (50) UNIQUE NOT NULL,
+            "username" VARCHAR (50),
+            "first_name" VARCHAR (50),
+            "last_name" VARCHAR (50),
+            "uik" VARCHAR(50)
+            );
+        """
 
-    async def add_user(self, user):
+        self._cursor.execute(create_users_table_sql)
+        self._connection.commit()
+        await self.close_connection()
+        return True
+
+    async def create_tests_table(self):
+        await self.set_connection()
+        create_tests_table_sql = """
+            CREATE TABLE tests (
+            "id" serial PRIMARY KEY, 
+            "user_id" INT NOT NULL,
+            "test_name" VARCHAR(50) NOT NULL,
+            "language" VARCHAR(50) NOT NULL,
+            "is_finished" VARCHAR(50) NOT NULL,
+            "result" VARCHAR(50),
+            "datetime" VARCHAR(50) NOT NULL,
+
+            CONSTRAINT FK_tests_users FOREIGN KEY(user_id)
+            REFERENCES users(id)
+            );
+        """
+
+        self._cursor.execute(create_tests_table_sql)
+        self._connection.commit()
+        await self.close_connection()
+        return True
+
+    async def create_logs_table(self):
+        await self.set_connection()
+        create_logs_table_sql = """
+            CREATE TABLE logs (
+            "id" serial PRIMARY KEY,
+            "user_id" INT NOT NULL, 
+            "action" VARCHAR(50) NOT NULL,
+            "datetime" VARCHAR(50) NOT NULL,
+
+            CONSTRAINT FK_logs_users FOREIGN KEY(user_id)
+            REFERENCES users(id)
+            );
+        """
+
+        self._cursor.execute(create_logs_table_sql)
+        self._connection.commit()
+        await self.close_connection()
+        return True
+
+    async def add_user(self, user, uik):
         await self.set_connection()
         sql_add_user = \
             f"""
-                INSERT INTO users(user_id, username, first_name, last_name) 
-                VALUES('{user.id}', '{user.username}', '{user.first_name}', '{user.last_name}')
+                INSERT INTO users(user_id, username, first_name, last_name, uik) 
+                VALUES('{user.id}', '{user.username}', '{user.first_name}', '{user.last_name}', '{uik}')
             """
         self._cursor.execute(sql_add_user)
         self._connection.commit()
         await self.close_connection()
+        await self.__download_users_table()
         return True
 
     async def get_user(self, user):
@@ -72,38 +134,80 @@ class PostgresDataBaseManager(DataBaseManager):
     async def check_user(self, user):
         user_data = await self.get_user(user)
         if not user_data:
-            await self.add_user(user=user)
+            return False
 
         return True
 
-    async def create_table_copy(self, original_table, new_table_name):
+    async def database_log(self, user, action):
         await self.set_connection()
-        copy_table_sql = f"CREATE TABLE {new_table_name} AS TABLE {original_table}"
-        self._cursor.execute(copy_table_sql)
+        datetime_data = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+        database_log_sql = f"""
+            INSERT INTO logs (user_id, action, datetime) VALUES ({user}, '{action}', '{datetime_data}')
+        """
+        self._cursor.execute(database_log_sql)
         self._connection.commit()
         await self.close_connection()
+        await self.__download_logs_table()
         return True
 
-    async def create_users_table(self):
+    async def add_new_test_results(self, test_result):
         await self.set_connection()
-        create_users_table_sql = """
-            CREATE TABLE users (
-            "id" serial PRIMARY KEY,
-            "user_id" VARCHAR (50) UNIQUE NOT NULL,
-            "username" VARCHAR (50),
-            "first_name" VARCHAR (50),
-            "last_name" VARCHAR (50));
+
+        columns = ""
+        list_with_columns = list(test_result.keys())
+        for column in list_with_columns:
+            columns += column
+            if list_with_columns.index(column) + 1 != len(list_with_columns):
+                columns += ", "
+
+        values = ""
+        list_with_values = list(test_result.values())
+        for value in list_with_values:
+            values += str(value)
+            if list_with_values.index(value) + 1 != len(list_with_values):
+                values += ", "
+
+        add_new_test_result_sql = f"""
+            INSERT INTO tests ({columns}) VALUES({values})
         """
 
-        self._cursor.execute(create_users_table_sql)
+        self._cursor.execute(add_new_test_result_sql)
         self._connection.commit()
         await self.close_connection()
+        await self.__download_tests_table()
         return True
 
-    async def transfer_data(self, table_from, table_to):
+    async def get_all_logs(self):
         await self.set_connection()
-        transfer_data_sql = f"INSERT INTO {table_to} (SELECT * FROM {table_from})"
-        self._cursor.execute(transfer_data_sql)
-        self._connection.commit()
+        get_all_logs_results_sql = """
+        SELECT * FROM logs
+        """
+        self._cursor.execute(get_all_logs_results_sql)
+        result = self._cursor.fetchall()
         await self.close_connection()
-        return True
+        return result
+
+    async def get_all_tests_results(self):
+        await self.set_connection()
+        get_all_tests_results_sql = """
+        SELECT * FROM tests
+        """
+        self._cursor.execute(get_all_tests_results_sql)
+        result = self._cursor.fetchall()
+        await self.close_connection()
+        return result
+
+    async def __download_logs_table(self):
+        file_name = "logs"
+        logs = await self.get_all_logs()
+        return await DataConvertor().convert_to_exel(values=logs, columns=DB_LOGS_COLUMNS, file_name=file_name)
+
+    async def __download_tests_table(self):
+        file_name = "tests"
+        tests = await self.get_all_tests_results()
+        return await DataConvertor().convert_to_exel(values=tests, columns=DB_TESTS_COLUMNS, file_name=file_name)
+
+    async def __download_users_table(self):
+        file_name = "users"
+        users = await self.get_all_users()
+        await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)
