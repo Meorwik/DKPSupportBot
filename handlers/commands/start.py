@@ -46,10 +46,10 @@ async def bot_start(message: types.Message):
         await message.answer(empty_login_text, reply_markup=empty_login_keyboard)
 
     else:
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
-        # await postgres_manager.create_users_table()
-        # await postgres_manager.create_tests_table()
-        # await postgres_manager.create_logs_table()
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+        await postgres_manager.create_users_table()
+        await postgres_manager.create_tests_table()
+        await postgres_manager.create_logs_table()
 
         if await postgres_manager.check_user(message.from_user):
             await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
@@ -61,7 +61,7 @@ async def bot_start(message: types.Message):
 @dp.message_handler(state=StateGroup.in_uik)
 async def handle_uik(message: types.Message):
     if await is_valid_uik(message.text.lower()):
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
         await postgres_manager.add_user(message.from_user, uik=message.text)
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")

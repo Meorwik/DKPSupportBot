@@ -9,6 +9,7 @@ from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, TestKeyboar
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from data.tests.test_manager import HivRiskAssessment, TESTS_LANGUAGES_CALLBACKS
 from utils.db_api.connection_configs import ConnectionConfig
+from utils.test_results_tamplate import TestResults
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
@@ -26,22 +27,11 @@ async def handle_back_button(message: types.Message):
 async def start_menu(callback_query: types.CallbackQuery):
     menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
     user = await postgres_manager.get_user(user=callback_query.from_user)
     await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с ботом!")
     await callback_query.message.delete()
-
-# ------------------------------HANDLE TESTS MENU----------------------------------------------
-@dp.message_handler(lambda message: message.text in TESTS_BUTTONS_TEXTS.values())
-async def handle_tests_menu(message: types.Message):
-    if message.text == TESTS_BUTTONS_TEXTS["hiv_risk_assessment"]:
-        ru_button = InlineKeyboardButton(text="Русский", callback_data="ru_hiv_risk_assessment")
-        kz_button = InlineKeyboardButton(text="Қазақша", callback_data="kz_hiv_risk_assessment")
-        language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button, kz_button)
-        await message.answer("Меню скрыто!", reply_markup=ReplyKeyboardRemove())
-        await message.answer("Выберите язык, чтобы продолжить:", reply_markup=language_select_keyboard)
-        await StateGroup.in_hiv_risk_assessment.set()
 
 # ------------------------------HANDLE MAIN MENU----------------------------------------------
 
@@ -122,6 +112,19 @@ async def send_info_document(callback_query: types.CallbackQuery):
 
     await callback_query.message.delete()
 
+# ------------------------------HANDLE TESTS MENU----------------------------------------------
+@dp.message_handler(lambda message: message.text in TESTS_BUTTONS_TEXTS.values())
+async def handle_tests_menu(message: types.Message):
+    if message.text == TESTS_BUTTONS_TEXTS["hiv_risk_assessment"]:
+        ru_button = InlineKeyboardButton(text="Русский", callback_data="ru_hiv_risk_assessment")
+        kz_button = InlineKeyboardButton(text="Қазақша", callback_data="kz_hiv_risk_assessment")
+        language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button, kz_button)
+        msg = await message.answer("Меню скрыто!", reply_markup=ReplyKeyboardRemove())
+        await msg.delete()
+        await message.answer("Выберите язык, чтобы продолжить:", reply_markup=language_select_keyboard)
+        await StateGroup.in_hiv_risk_assessment.set()
+
+
 # ---------------------------TESTS HANDLERS-----------------------------------------------
 
 @dp.callback_query_handler(lambda call: call.data in TESTS_LANGUAGES_CALLBACKS, state=StateGroup.in_hiv_risk_assessment)
@@ -129,22 +132,22 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     test_keyboard_builder = TestKeyboardBuilder()
     test_materials = HivRiskAssessment().get_ru_version()
 
-    database_data = {}
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    database_data = TestResults()
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(call.from_user)
 
-    database_data["user_id"] = user[0][0]
-    database_data["test_name"] = "'hiv_risk_assessment'"
+    database_data.user_id = user[0][0]
+    database_data.test_name = 'hiv_risk_assessment'
 
     if "hiv_risk_assessment" in call.data:
         logging.info(f"Пользователь {call.from_user.id} начал тест: hiv_risk_assessment")
         await postgres_manager.database_log(user[0][0], "Начал тест: hiv_risk_assessment")
         if call.data.startswith("ru"):
-            database_data["language"] = "'ru'"
+            database_data.language = 'ru'
             test_materials = HivRiskAssessment().get_ru_version()
 
         elif call.data.startswith("kz"):
-            database_data["language"] = "'kz'"
+            database_data.language = 'kz'
             test_materials = HivRiskAssessment().get_kz_version()
 
         keyboards = test_keyboard_builder.get_keyboards(test_materials=test_materials)
@@ -175,7 +178,7 @@ async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContex
 
         database_data = state_memory["data"]
 
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
     high_risk = risks["high"]
     medium_risk = risks["medium"]
@@ -183,27 +186,28 @@ async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContex
 
     if question_number == len(keyboards):
 
-        database_data["is_finished"] = "'True'"
+        database_data.is_finished = True
 
         await state.finish()
         back_to_menu = SimpleKeyboardBuilder.get_back_to_menu_keyboard()
 
         if score >= 22:
             await call.message.answer(text=high_risk, reply_markup=back_to_menu)
-            database_data["result"] = "'high_risk'"
+            database_data.result = 'high_risk'
             await call.message.delete()
 
         elif 21 >= score >= 7:
             await call.message.answer(text=medium_risk, reply_markup=back_to_menu)
-            database_data['result'] = "'medium_risk'"
+            database_data.result = 'medium_risk'
             await call.message.delete()
 
         elif score < 7:
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
-            database_data["result"] = "'small_risk'"
+            database_data.result = 'small_risk'
             await call.message.delete()
 
-        database_data["datetime"] = f"'{datetime.today().strftime('%d/%m/%Y')}'"
+        database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
+        database_data = database_data.to_dict()
         await postgres_manager.add_new_test_results(database_data)
         del postgres_manager
 

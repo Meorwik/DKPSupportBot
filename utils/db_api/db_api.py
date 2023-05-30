@@ -43,10 +43,11 @@ class DataBaseManager:
 
 
 class PostgresDataBaseManager(DataBaseManager):
+    #--------------CREATE TABLES--------------
     async def create_users_table(self):
         await self.set_connection()
         create_users_table_sql = """
-            CREATE TABLE users (
+            CREATE TABLE IF NOT EXISTS users (
             "id" serial PRIMARY KEY,
             "user_id" VARCHAR (50) UNIQUE NOT NULL,
             "username" VARCHAR (50),
@@ -64,7 +65,7 @@ class PostgresDataBaseManager(DataBaseManager):
     async def create_tests_table(self):
         await self.set_connection()
         create_tests_table_sql = """
-            CREATE TABLE tests (
+            CREATE TABLE IF NOT EXISTS tests (
             "id" serial PRIMARY KEY, 
             "user_id" INT NOT NULL,
             "test_name" VARCHAR(50) NOT NULL,
@@ -86,7 +87,7 @@ class PostgresDataBaseManager(DataBaseManager):
     async def create_logs_table(self):
         await self.set_connection()
         create_logs_table_sql = """
-            CREATE TABLE logs (
+            CREATE TABLE IF NOT EXISTS logs (
             "id" serial PRIMARY KEY,
             "user_id" INT NOT NULL, 
             "action" VARCHAR(50) NOT NULL,
@@ -101,6 +102,8 @@ class PostgresDataBaseManager(DataBaseManager):
         self._connection.commit()
         await self.close_connection()
         return True
+
+    #------------ACTIONS WITH USERS-------------
 
     async def add_user(self, user, uik):
         await self.set_connection()
@@ -138,6 +141,8 @@ class PostgresDataBaseManager(DataBaseManager):
 
         return True
 
+    #------------ACTIONS WITH LOGS----------------
+
     async def database_log(self, user, action):
         await self.set_connection()
         datetime_data = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
@@ -150,33 +155,6 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.__download_logs_table()
         return True
 
-    async def add_new_test_results(self, test_result):
-        await self.set_connection()
-
-        columns = ""
-        list_with_columns = list(test_result.keys())
-        for column in list_with_columns:
-            columns += column
-            if list_with_columns.index(column) + 1 != len(list_with_columns):
-                columns += ", "
-
-        values = ""
-        list_with_values = list(test_result.values())
-        for value in list_with_values:
-            values += str(value)
-            if list_with_values.index(value) + 1 != len(list_with_values):
-                values += ", "
-
-        add_new_test_result_sql = f"""
-            INSERT INTO tests ({columns}) VALUES({values})
-        """
-
-        self._cursor.execute(add_new_test_result_sql)
-        self._connection.commit()
-        await self.close_connection()
-        await self.__download_tests_table()
-        return True
-
     async def get_all_logs(self):
         await self.set_connection()
         get_all_logs_results_sql = """
@@ -187,6 +165,34 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.close_connection()
         return result
 
+    #------------ACTIONS WITH TESTS---------------
+
+    async def add_new_test_results(self, test_result):
+        await self.set_connection()
+        add_new_test_result_sql = f"""
+            INSERT INTO tests (
+                user_id, 
+                test_name, 
+                language, 
+                is_finished, 
+                result, 
+                datetime) 
+                
+                VALUES(
+                    {test_result["user_id"]}, 
+                    '{test_result["test_name"]}', 
+                    '{test_result["language"]}', 
+                    '{test_result["is_finished"]}', 
+                    '{test_result["result"]}', 
+                    '{test_result["datetime"]}')
+        """
+
+        self._cursor.execute(add_new_test_result_sql)
+        self._connection.commit()
+        await self.close_connection()
+        await self.__download_tests_table()
+        return True
+
     async def get_all_tests_results(self):
         await self.set_connection()
         get_all_tests_results_sql = """
@@ -196,6 +202,8 @@ class PostgresDataBaseManager(DataBaseManager):
         result = self._cursor.fetchall()
         await self.close_connection()
         return result
+
+    #---------------DOWNLOAD TABLES----------------
 
     async def __download_logs_table(self):
         file_name = "logs"
