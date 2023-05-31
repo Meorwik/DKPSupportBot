@@ -47,9 +47,6 @@ async def bot_start(message: types.Message):
 
     else:
         postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-        await postgres_manager.create_users_table()
-        await postgres_manager.create_tests_table()
-        await postgres_manager.create_logs_table()
 
         if await postgres_manager.check_user(message.from_user):
             await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
