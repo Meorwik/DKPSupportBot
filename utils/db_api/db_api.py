@@ -6,7 +6,8 @@ DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name", "uik
 DB_TESTS_COLUMNS = ["id", "user_id", "test_name", "language", "is_finished", "result", "datetime"]
 DB_LOGS_COLUMNS = ["id", "user_id", "action", "datetime"]
 
-
+# КЛАСС: DataConvertor
+# Создан для конвертации и загрузки данных в файлы
 class DataConvertor:
     async def convert_to_exel(self, values, columns, file_name):
         file_path = f"data/database_backup/{file_name}.xlsx"
@@ -17,7 +18,8 @@ class DataConvertor:
         except PermissionError:
             return file_path
 
-
+# КЛАСС: DataBaseManager
+# Класс родитель, создан для наследования и дальнейшего описания общих функций в одном классе предке.
 class DataBaseManager:
     def __init__(self, config):
         self.config = config
@@ -41,7 +43,8 @@ class DataBaseManager:
     async def close_connection(self):
         self._connection.close()
 
-
+# КЛАСС: PostgresDataBaseManager
+# Создан для работы с Postgres
 class PostgresDataBaseManager(DataBaseManager):
     #--------------CREATE TABLES--------------
     async def create_users_table(self):
@@ -115,7 +118,7 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(sql_add_user)
         self._connection.commit()
         await self.close_connection()
-        await self.__download_users_table()
+        await self.download_users_table()
         return True
 
     async def get_user(self, user):
@@ -134,12 +137,9 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.close_connection()
         return result
 
-    async def check_user(self, user):
+    async def is_new_user(self, user):
         user_data = await self.get_user(user)
-        if not user_data:
-            return False
-
-        return True
+        return not user_data
 
     #------------ACTIONS WITH LOGS----------------
 
@@ -152,7 +152,7 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(database_log_sql)
         self._connection.commit()
         await self.close_connection()
-        await self.__download_logs_table()
+        await self.download_logs_table()
         return True
 
     async def get_all_logs(self):
@@ -190,7 +190,7 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(add_new_test_result_sql)
         self._connection.commit()
         await self.close_connection()
-        await self.__download_tests_table()
+        await self.download_tests_table()
         return True
 
     async def get_all_tests_results(self):
@@ -205,17 +205,17 @@ class PostgresDataBaseManager(DataBaseManager):
 
     #---------------DOWNLOAD TABLES----------------
 
-    async def __download_logs_table(self):
+    async def download_logs_table(self):
         file_name = "logs"
         logs = await self.get_all_logs()
         return await DataConvertor().convert_to_exel(values=logs, columns=DB_LOGS_COLUMNS, file_name=file_name)
 
-    async def __download_tests_table(self):
+    async def download_tests_table(self):
         file_name = "tests"
         tests = await self.get_all_tests_results()
         return await DataConvertor().convert_to_exel(values=tests, columns=DB_TESTS_COLUMNS, file_name=file_name)
 
-    async def __download_users_table(self):
+    async def download_users_table(self):
         file_name = "users"
         users = await self.get_all_users()
-        await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)
+        return await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)

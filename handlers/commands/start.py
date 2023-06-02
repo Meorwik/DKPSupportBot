@@ -3,6 +3,7 @@ from keyboards.default.default_keyboards import MenuKeyboardBuilder
 from utils.db_api.connection_configs import ConnectionConfig
 from aiogram.dispatcher.filters.builtin import CommandStart
 from utils.db_api.db_api import PostgresDataBaseManager
+from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
 from aiogram import types
@@ -10,10 +11,15 @@ from loader import dp
 
 greeting_message = """
 Здравствуйте!
-Я – бот, который поможет Вам оценить риск инфицирования ВИЧ и понять, нужны ли услуги по профилактике ВИЧ.
-Для того чтобы продолжить, введите пожалуйста ваш УИК.
 
+Я – бот, который поможет Вам оценить риск инфицирования ВИЧ и понять, нужны ли услуги по профилактике ВИЧ.
+
+Для того чтобы продолжить, введите пожалуйста ваш УИК.
+"""
+
+uik_info = """
 Если у вас нет УИКа, его можно составить по следующим инструкциям:
+
 - Первые две буквы имени папы
 - Первые две буквы имени мамы
 - Ваш пол (1 - Мужчина, 2 - Женщина, 4 - Трансгендерная персона)
@@ -46,19 +52,20 @@ async def bot_start(message: types.Message):
         await message.answer(empty_login_text, reply_markup=empty_login_keyboard)
 
     else:
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
-        if await postgres_manager.check_user(message.from_user):
+        if not await postgres_manager.is_new_user(message.from_user):
             await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
         else:
             await message.answer(greeting_message)
+            await message.answer(uik_info)
             await StateGroup.in_uik.set()
 
 @dp.message_handler(state=StateGroup.in_uik)
-async def handle_uik(message: types.Message):
+async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
         await postgres_manager.add_user(message.from_user, uik=message.text)
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")
@@ -66,6 +73,6 @@ async def handle_uik(message: types.Message):
         await postgres_manager.database_log(user=user[0][0], action="Успешно добавлен в базу!")
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
-
+        await state.finish()
     else:
         await message.answer("Ошибка!\nПопробуйте снова.")

@@ -1,7 +1,10 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from random import shuffle
 from aiogram import types
 
-
+# КЛАСС: TestKeyboardBuilder
+# Создан для создания клавиатур на основе которых будут работать тесты,
+# принимает на вход данные теста и возвращает список со всеми клавиатурами
 class TestKeyboardBuilder:
     def __init__(self):
         self.questions = None
@@ -20,6 +23,7 @@ class TestKeyboardBuilder:
                     question["answers"].items()
                 ]
 
+            shuffle(buttons)
             question_text = question["question_text"]
             product = {"text": question_text, "keyboard": InlineKeyboardMarkup(row_width=1).add(*buttons)}
             keyboards[f"question_{question_number}"] = product
@@ -30,7 +34,8 @@ class TestKeyboardBuilder:
 
         return self.__create_keyboards()
 
-
+# КЛАССЖ: SimpleKeyboardBuilder
+# Создан для работы с простыми клавиатурами и мелкими действиями.
 class SimpleKeyboardBuilder:
     @classmethod
     def get_social_networks_keyboard(cls):
@@ -89,3 +94,10 @@ class SimpleKeyboardBuilder:
     def get_back_to_menu_keyboard(cls):
         back_to_menu = InlineKeyboardButton(text="Назад в меню", callback_data="menu")
         return InlineKeyboardMarkup(row_width=1).add(back_to_menu)
+
+    @classmethod
+    def get_language_selection_keyboard(cls, callback):
+        ru_button = InlineKeyboardButton(text="Русский", callback_data=f"ru_{callback}")
+        kz_button = InlineKeyboardButton(text="Қазақша", callback_data=f"kz_{callback}")
+        language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button, kz_button)
+        return language_select_keyboard

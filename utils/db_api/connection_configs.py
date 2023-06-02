@@ -39,9 +39,9 @@ class ConnectionConfig:
     def get_test_db_connection_config(cls):
         db_name = "railway"
         db_user = "postgres"
-        db_password = "gd2sFXTHjZb0IOMosa72"
-        db_host = "containers-us-west-17.railway.app"
-        db_port = "8025"
+        db_password = "8yNOalMo1l7JKdAGAV5m"
+        db_host = "containers-us-west-72.railway.app"
+        db_port = "8017"
 
         postgres_connection_config = {
             "dbname": db_name,

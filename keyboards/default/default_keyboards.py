@@ -2,18 +2,18 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from data.config import is_admin
 
 TESTS_BUTTONS_TEXTS = {
-    "hiv_risk_assessment": "Тест на оценку риска инфицирования ВИЧ 📋",
-    "test2": "",
-    "test3": "",
-    "test4": "",
-    "test5": "",
+    "hiv_risk_assessment": "Оценка риска инфицирования ВИЧ 📋",
+    "sogi_assessment": "Оценка знаний на тему СОГИ 📋",
+    "pkp_assessment": "📋",
+    "hiv_knowledge_assessment": "📋",
+    "understanding_PLHIV_assessment": "📋",
 }
 
 INFO_BUTTONS_TEXTS = {
-    "social_networks": "Мы в соц.сетях 🔈",
-    "project_news": "Новости проекта 📌",
-    "tell_partner": "Расскажите партнёру о важности тестирования анонимно 🙋‍♀",
-    "info_files": "Всё о доконтактной профилактике ВИЧ 📚",
+    "social_networks": "🔈 Мы в соц.сетях",
+    "project_news": "📌 Новости проекта",
+    "tell_partner": "🙋‍♀ Расскажите партнёру о важности тестирования анонимно",
+    "info_files": "📚 Всё о доконтактной профилактике ВИЧ",
 }
 
 ADMIN_BUTTONS_TEXTS = {
@@ -23,16 +23,17 @@ ADMIN_BUTTONS_TEXTS = {
 MENU_BUTTONS_TEXTS = {
     "tests": "Тесты",
     "info": "Инфо",
-    "admin": "Панель администратора ⚙️",
-    "order_vih_test": "Заказать бесплатный тест на ВИЧ 💊",
-    "contacting_consultant": "Обращение к консультанту",
-    "rate_bot": "Оценить бота",
+    "admin": "⚙️ Панель администратора",
+    "order_vih_test": "💊 Заказать бесплатный тест на ВИЧ",
+    "contacting_consultant": "👤 Обращение к консультанту",
+    "rate_bot": '✨ Оценить бота',
 }
 
-
+# КЛАСС: MenuKeyboardBuilder
+# Создан для работы с клавиатурами, создает клавиатуры для меню и его разделов.
 class MenuKeyboardBuilder:
     def __init__(self):
-        self.__keyboard = ReplyKeyboardMarkup(row_width=1)
+        self.__keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
         self.__buttons = []
 
     def __add_admin_menu(self):
@@ -63,8 +64,10 @@ class MenuKeyboardBuilder:
 
     def get_tests_menu_keyboard(self):
         hiv_risk_assessment = KeyboardButton(TESTS_BUTTONS_TEXTS["hiv_risk_assessment"])
+        sogi_assessment = KeyboardButton(TESTS_BUTTONS_TEXTS["sogi_assessment"])
+
         self.__keyboard.clean()
-        self.__keyboard.add(hiv_risk_assessment)
+        self.__keyboard.add(hiv_risk_assessment, sogi_assessment)
         self.__add_back_button()
         return self.__keyboard
 
