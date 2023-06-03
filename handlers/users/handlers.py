@@ -224,6 +224,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
 
 
 async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, max_result, min_result, medium_result_min, medium_result_max):
+    await call.message.delete()
     async with state.proxy() as state_memory:
         state_memory["score"] += int(call.data)
         state_memory["question_number"] += 1
@@ -265,7 +266,6 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         del postgres_manager
 
     else:
-        await call.message.delete()
         await call.message.answer \
                 (
                 text=keyboards[f"question_{question_number}"]["text"],
