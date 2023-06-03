@@ -1,5 +1,4 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from random import shuffle
 from aiogram import types
 
 # КЛАСС: TestKeyboardBuilder
@@ -23,7 +22,6 @@ class TestKeyboardBuilder:
                     question["answers"].items()
                 ]
 
-            shuffle(buttons)
             question_text = question["question_text"]
             product = {"text": question_text, "keyboard": InlineKeyboardMarkup(row_width=1).add(*buttons)}
             keyboards[f"question_{question_number}"] = product
@@ -34,7 +32,7 @@ class TestKeyboardBuilder:
 
         return self.__create_keyboards()
 
-# КЛАССЖ: SimpleKeyboardBuilder
+# КЛАСС: SimpleKeyboardBuilder
 # Создан для работы с простыми клавиатурами и мелкими действиями.
 class SimpleKeyboardBuilder:
     @classmethod
@@ -101,3 +99,9 @@ class SimpleKeyboardBuilder:
         kz_button = InlineKeyboardButton(text="Қазақша", callback_data=f"kz_{callback}")
         language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button, kz_button)
         return language_select_keyboard
+
+    @classmethod
+    def get_error_keyboard(cls):
+        error_button = InlineKeyboardButton("ОШИБКА!", callback_data="error")
+        error_keyboard = InlineKeyboardMarkup(row_width=1).add(error_button)
+        return error_keyboard

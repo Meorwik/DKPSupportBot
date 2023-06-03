@@ -6,6 +6,7 @@ from utils.db_api.db_api import PostgresDataBaseManager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
+from datetime import datetime
 from aiogram import types
 from loader import dp
 
@@ -42,16 +43,32 @@ async def is_valid_uik(uik: str):
         return False
 
 
-@dp.message_handler(CommandStart(), state="*")
-async def bot_start(message: types.Message):
-    if not message.from_user.username:
-        empty_login_keyboard = InlineKeyboardMarkup()
-        empty_login_fix_button = InlineKeyboardButton("Перейти", url=login_instruction_link)
-        empty_login_keyboard.add(empty_login_fix_button)
+async def cancel_test_handler(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
 
-        await message.answer(empty_login_text, reply_markup=empty_login_keyboard)
+    if current_state is None:
+        return False
+
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+
+    async with state.proxy() as state_memory:
+        state_memory["data"].is_finished = False
+        state_memory["data"].datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
+        state_memory["data"] = state_memory["data"].to_dict()
+        await postgres_manager.add_new_test_results(state_memory["data"])
+
+    await state.finish()
+    await message.delete()
+
+@dp.message_handler(CommandStart(), state="*")
+async def bot_start(message: types.Message, state: FSMContext):
+    if not message.from_user.username:
+        empty_login_keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton("Перейти", url=login_instruction_link))
+        await message.answer(text=empty_login_text, reply_markup=empty_login_keyboard)
 
     else:
+        await cancel_test_handler(message, state)
+
         postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
         if not await postgres_manager.is_new_user(message.from_user):
