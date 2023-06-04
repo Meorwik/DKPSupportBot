@@ -262,6 +262,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
 
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
+        print(database_data)
         await postgres_manager.add_new_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data.test_name}!")
         await postgres_manager.database_log(user=call.from_user, action=f"Успешно завершил тест {database_data.test_name}!")
