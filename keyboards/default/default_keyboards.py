@@ -4,9 +4,9 @@ from data.config import is_admin
 TESTS_BUTTONS_TEXTS = {
     "hiv_risk_assessment": "Оценка риска инфицирования ВИЧ 📋",
     "sogi_assessment": "Оценка знаний на тему СОГИ 📋",
-    "pkp_assessment": "📋",
-    "hiv_knowledge_assessment": "📋",
-    "understanding_PLHIV_assessment": "📋",
+    "pkp_assessment": "Тестирование ПКП 📋",
+    "hiv_knowledge_assessment": "Оценка знаний о ВИЧ 📋",
+    "understanding_PLHIV_assessment": "Тестирование на понимание ЛЖВ 📋",
 }
 
 INFO_BUTTONS_TEXTS = {
@@ -63,11 +63,21 @@ class MenuKeyboardBuilder:
         return self.__keyboard
 
     def get_tests_menu_keyboard(self):
-        hiv_risk_assessment = KeyboardButton(TESTS_BUTTONS_TEXTS["hiv_risk_assessment"])
-        sogi_assessment = KeyboardButton(TESTS_BUTTONS_TEXTS["sogi_assessment"])
+        hiv_risk_assessment_button = KeyboardButton(TESTS_BUTTONS_TEXTS["hiv_risk_assessment"])
+        sogi_assessment_button = KeyboardButton(TESTS_BUTTONS_TEXTS["sogi_assessment"])
+        pkp_assessment_button = KeyboardButton(TESTS_BUTTONS_TEXTS["pkp_assessment"])
+        hiv_knowledge_assessment_button = KeyboardButton(TESTS_BUTTONS_TEXTS["hiv_knowledge_assessment"])
+        understanding_PLHIV_assessment_button = KeyboardButton(TESTS_BUTTONS_TEXTS["understanding_PLHIV_assessment"])
 
         self.__keyboard.clean()
-        self.__keyboard.add(hiv_risk_assessment, sogi_assessment)
+        self.__keyboard.add(
+            hiv_risk_assessment_button,
+            sogi_assessment_button,
+            pkp_assessment_button,
+            hiv_knowledge_assessment_button,
+            understanding_PLHIV_assessment_button
+        )
+
         self.__add_back_button()
         return self.__keyboard
 
