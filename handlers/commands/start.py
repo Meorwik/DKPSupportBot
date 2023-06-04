@@ -7,8 +7,8 @@ from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
 from datetime import datetime
+from loader import dp, bot
 from aiogram import types
-from loader import dp
 
 greeting_message = """
 Здравствуйте!
@@ -51,6 +51,8 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
 
     else:
         try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id-1)
+
             postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
             async with state.proxy() as state_memory:
