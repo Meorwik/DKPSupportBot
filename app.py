@@ -7,7 +7,7 @@ import handlers
 
 async def on_startup(dispatcher):
     await set_default_commands(dispatcher)
-    # await on_startup_notify(dispatcher)
+    # await on_startup_notify(dispatcher) #off
 
 
 if __name__ == '__main__':
