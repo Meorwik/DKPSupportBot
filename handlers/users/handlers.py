@@ -142,6 +142,7 @@ async def send_info_document(callback_query: types.CallbackQuery):
 async def handle_tests_menu(message: types.Message):
     msg = await message.answer("Меню скрыто!", reply_markup=ReplyKeyboardRemove())
     await msg.delete()
+    await message.delete()
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
     choose_language_text = "Выберите язык, чтобы продолжить:"
@@ -224,8 +225,9 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
         state_memory["data"] = database_data
 
     await call.message.answer(keyboards["question_1"]["text"], reply_markup=keyboards["question_1"]["keyboard"])
-    await call.message.delete()
     await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id - 1)
+    await call.message.delete()
+
 
 
 async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, max_result, min_result, medium_result_min, medium_result_max):
