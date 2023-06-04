@@ -140,8 +140,6 @@ async def send_info_document(callback_query: types.CallbackQuery):
 # ------------------------------HANDLE TESTS MENU----------------------------------------------
 @dp.message_handler(lambda message: message.text in TESTS_BUTTONS_TEXTS.values())
 async def handle_tests_menu(message: types.Message):
-    msg = await message.answer("Меню скрыто!", reply_markup=ReplyKeyboardRemove())
-    await msg.delete()
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     await message.delete()
 
