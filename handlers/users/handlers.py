@@ -24,8 +24,6 @@ from datetime import datetime
 from loader import dp, bot
 from aiogram import types
 
-
-from aiogram.dispatcher.filters import Text
 @dp.callback_query_handler(lambda call: call.data == "error")
 async def handle_error_situation(callback: types.CallbackQuery):
     await callback.message.delete()
