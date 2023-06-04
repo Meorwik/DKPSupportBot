@@ -248,17 +248,14 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         if score >= max_result:
             await call.message.answer(text=high_risk, reply_markup=back_to_menu)
             database_data.result = 'high_risk'
-            await call.message.delete()
 
         elif medium_result_max >= score >= medium_result_min:
             await call.message.answer(text=medium_risk, reply_markup=back_to_menu)
             database_data.result = 'medium_risk'
-            await call.message.delete()
 
         elif score < min_result:
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
             database_data.result = 'small_risk'
-            await call.message.delete()
 
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
