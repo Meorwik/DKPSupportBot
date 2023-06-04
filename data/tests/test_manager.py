@@ -49,24 +49,24 @@ class SogiAssessment(Assessment):
 class PkpAssessment(Assessment):
     def __init__(self):
         self.questions_kz = None
-        self.questions_ru = None
+        self.questions_ru = pkp_assessment.questions_ru
 
-        self.result_ratings_kz = None
-        self.result_ratings_ru = None
+        self.result_ratings_kz = pkp_assessment.result_ratings_kz
+        self.result_ratings_ru = pkp_assessment.result_ratings_ru
 
 class UnderstandingPLHIVAssessment(Assessment):
     def __init__(self):
         self.questions_kz = None
-        self.questions_ru = None
+        self.questions_ru = understanding_PLHIV_assessment.questions_ru
 
-        self.result_ratings_kz = None
-        self.result_ratings_ru = None
+        self.result_ratings_kz = understanding_PLHIV_assessment.result_ratings_kz
+        self.result_ratings_ru = understanding_PLHIV_assessment.result_ratings_ru
 
 
 class HivKnowledgeAssessment(Assessment):
     def __init__(self):
         self.questions_kz = None
-        self.questions_ru = None
+        self.questions_ru = hiv_knowledge_assessment.questions_ru
 
-        self.result_ratings_kz = None
-        self.result_ratings_ru = None
+        self.result_ratings_kz = hiv_knowledge_assessment.result_ratings_kz
+        self.result_ratings_ru = hiv_knowledge_assessment.result_ratings_ru

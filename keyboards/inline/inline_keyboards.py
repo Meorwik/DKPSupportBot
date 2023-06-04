@@ -97,7 +97,7 @@ class SimpleKeyboardBuilder:
     def get_language_selection_keyboard(cls, callback):
         ru_button = InlineKeyboardButton(text="Русский", callback_data=f"ru_{callback}")
         kz_button = InlineKeyboardButton(text="Қазақша", callback_data=f"kz_{callback}")
-        language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button, kz_button)
+        language_select_keyboard = InlineKeyboardMarkup(row_width=1).add(ru_button)
         return language_select_keyboard
 
     @classmethod

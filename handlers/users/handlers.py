@@ -253,7 +253,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
             await call.message.answer(text=medium_risk, reply_markup=back_to_menu)
             database_data.result = 'medium_result'
 
-        elif score < min_result:
+        elif score <= min_result:
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
             database_data.result = 'small_result'
 
@@ -289,24 +289,24 @@ async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContex
                                      min_result=9,
                                      medium_result_max=16,
                                      medium_result_min=10)
-#-------------------------------------------------------------------------------
+
     elif test_name == "pkp_assessment":
         await handle_tests_callbacks(state, call,
-                                     max_result=17,
-                                     min_result=9,
-                                     medium_result_max=16,
-                                     medium_result_min=10)
+                                     max_result=8,
+                                     min_result=3,
+                                     medium_result_max=7,
+                                     medium_result_min=4)
 
     elif test_name == "hiv_knowledge_assessment":
         await handle_tests_callbacks(state, call,
-                                     max_result=17,
-                                     min_result=9,
-                                     medium_result_max=16,
-                                     medium_result_min=10)
+                                     max_result=13,
+                                     min_result=6,
+                                     medium_result_max=12,
+                                     medium_result_min=7)
 
     elif test_name == "understanding_PLHIV_assessment":
         await handle_tests_callbacks(state, call,
-                                     max_result=17,
-                                     min_result=9,
-                                     medium_result_max=16,
-                                     medium_result_min=10)
+                                     max_result=11,
+                                     min_result=5,
+                                     medium_result_max=10,
+                                     medium_result_min=6)
