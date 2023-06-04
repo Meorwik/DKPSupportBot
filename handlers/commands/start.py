@@ -51,7 +51,8 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
 
     else:
         try:
-            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id-1)
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 2)
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
             postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
