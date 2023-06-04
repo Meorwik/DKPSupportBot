@@ -50,7 +50,6 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
         return False
 
     else:
-        print(current_state)
         try:
             postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
@@ -60,11 +59,11 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
                 state_memory["data"] = state_memory["data"].to_dict()
                 await postgres_manager.add_new_test_results(state_memory["data"])
 
-            await state.finish()
-            await message.delete()
-
         except KeyError:
-            return False
+            pass
+
+        await state.finish()
+        await message.delete()
 
 @dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state: FSMContext):
