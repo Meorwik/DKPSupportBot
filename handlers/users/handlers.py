@@ -225,7 +225,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
 
     await call.message.answer(keyboards["question_1"]["text"], reply_markup=keyboards["question_1"]["keyboard"])
     await call.message.delete()
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    await bot.delete_message(chat_id=call.from_user.id, message_id=call.message.message_id - 1)
 
 
 async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, max_result, min_result, medium_result_min, medium_result_max):
