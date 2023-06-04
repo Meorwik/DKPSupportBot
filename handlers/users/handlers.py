@@ -35,6 +35,7 @@ async def handle_error_situation(callback: types.CallbackQuery):
 async def handle_back_button(message: types.Message):
     if message.text == "Назад в меню ⬅️":
         await message.delete()
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
 @dp.callback_query_handler(lambda callback: callback.data == 'menu')
@@ -55,16 +56,19 @@ async def handle_menu_buttons(message: types.Message):
     user = await postgres_manager.get_user(user=message.from_user)
 
     if message.text == MENU_BUTTONS_TEXTS["tests"]:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.delete()
         await message.answer("Меню тестов", reply_markup=MenuKeyboardBuilder().get_tests_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["info"]:
-        await message.answer("Меню информации", reply_markup=MenuKeyboardBuilder().get_info_menu_keyboard())
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.delete()
+        await message.answer("Меню информации", reply_markup=MenuKeyboardBuilder().get_info_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["admin"]:
-        await message.answer("Меню администратора", reply_markup=MenuKeyboardBuilder().get_admin_menu_keyboard())
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.delete()
+        await message.answer("Меню администратора", reply_markup=MenuKeyboardBuilder().get_admin_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["order_vih_test"]:
         # Это все равно временный вариант, до того как мы не сделаем работу с API
@@ -124,16 +128,15 @@ async def send_info_document(callback_query: types.CallbackQuery):
         await callback_query.message.edit_text("Пару секунд, загружаю информацию...")
 
         with open("data/info_files/Что такое ДКП ВИЧ.pdf", "rb") as ru_document:
-            await bot.send_document(callback_query.from_user.id, document=ru_document)
+            await callback_query.message.answer_document(ru_document)
 
     elif callback_query.data == "send_document_KZ":
         await callback_query.message.edit_text("Бірнеше секунд, ақпаратты жүктеп салу...")
 
         with open("data/info_files/КДП дегеніміз не.pdf", "rb") as kz_document:
-            await bot.send_document(callback_query.from_user.id, document=kz_document)
+            await callback_query.message.answer_document(kz_document)
 
     await callback_query.message.delete()
-
 # ------------------------------HANDLE TESTS MENU----------------------------------------------
 @dp.message_handler(lambda message: message.text in TESTS_BUTTONS_TEXTS.values())
 async def handle_tests_menu(message: types.Message):
@@ -261,7 +264,8 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         database_data = database_data.to_dict()
         await postgres_manager.add_new_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data['test_name']}!")
-        await postgres_manager.database_log(user=call.from_user, action=f"Успешно завершил тест {database_data['test_name']}!")
+        user = await postgres_manager.get_user(user=call.from_user)
+        await postgres_manager.database_log(user[0][0], action=f"Успешно завершил тест {database_data['test_name']}!")
 
     else:
         await call.message.answer \
