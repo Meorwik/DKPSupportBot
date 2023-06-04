@@ -54,17 +54,26 @@ async def handle_menu_buttons(message: types.Message):
     user = await postgres_manager.get_user(user=message.from_user)
 
     if message.text == MENU_BUTTONS_TEXTS["tests"]:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        except:
+            pass
         await message.delete()
         await message.answer("Меню тестов", reply_markup=MenuKeyboardBuilder().get_tests_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["info"]:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        except:
+            pass
         await message.delete()
         await message.answer("Меню информации", reply_markup=MenuKeyboardBuilder().get_info_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["admin"]:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        try:
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        except:
+            pass
         await message.delete()
         await message.answer("Меню администратора", reply_markup=MenuKeyboardBuilder().get_admin_menu_keyboard())
 
@@ -138,7 +147,11 @@ async def send_info_document(callback_query: types.CallbackQuery):
 # ------------------------------HANDLE TESTS MENU----------------------------------------------
 @dp.message_handler(lambda message: message.text in TESTS_BUTTONS_TEXTS.values())
 async def handle_tests_menu(message: types.Message):
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    try:
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+
+    except:
+        pass
     await message.delete()
 
     choose_language_text = "Выберите язык, чтобы продолжить:"
