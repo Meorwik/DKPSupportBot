@@ -99,5 +99,6 @@ async def handle_uik(message: types.Message, state: FSMContext):
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
         await state.finish()
+
     else:
         await message.answer("Ошибка!\nПопробуйте снова.")
