@@ -38,15 +38,6 @@ async def handle_back_button(message: types.Message):
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
-@dp.callback_query_handler(lambda callback: callback.data == 'menu')
-async def start_menu(callback_query: types.CallbackQuery):
-    menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
-    await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
-    user = await postgres_manager.get_user(user=callback_query.from_user)
-    await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с ботом!")
-    logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
-    await callback_query.message.delete()
 
 # ------------------------------HANDLE MAIN MENU----------------------------------------------
 
