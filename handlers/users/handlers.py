@@ -36,6 +36,15 @@ async def handle_back_button(message: types.Message):
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
+@dp.callback_query_handler(lambda callback: callback.data == 'menu')
+async def start_menu(callback_query: types.CallbackQuery):
+    menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
+    await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    user = await postgres_manager.get_user(user=callback_query.from_user)
+    await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с ботом!")
+    logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
+    await callback_query.message.delete()
 
 # ------------------------------HANDLE MAIN MENU----------------------------------------------
 
@@ -249,12 +258,13 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
             database_data.result = 'small_result'
 
+        await call.message.delete()
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
         await postgres_manager.add_new_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data['test_name']}!")
         user = await postgres_manager.get_user(user=call.from_user)
-        await postgres_manager.database_log(user[0][0], action=f"Успешно завершил тест {database_data['test_name']}!")
+        await postgres_manager.database_log(user[0][0], action=f"Завершил тест {database_data['test_name']}!")
 
     else:
         await call.message.edit_text\

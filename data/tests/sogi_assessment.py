@@ -238,45 +238,45 @@ C) Гендерные роли и стереотипы основаны искл
 question_1_ru = {
     "question_text": question_1_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '0'
     }
 }
 
 question_2_ru = {
     "question_text": question_2_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_3_ru = {
     "question_text": question_3_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_4_ru = {
     "question_text": question_4_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_5_ru = {
     "question_text": question_5_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 0,
-        "Ответ C": 1
+        "Ответ A": '00',
+        "Ответ B": '0',
+        "Ответ C": '1'
 
     }
 }
@@ -284,135 +284,135 @@ question_5_ru = {
 question_6_ru = {
     "question_text": question_6_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_7_ru = {
     "question_text": question_7_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_8_ru = {
     "question_text": question_8_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '0'
     }
 }
 
 question_9_ru = {
     "question_text": question_9_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_10_ru = {
     "question_text": question_10_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '0',
+        "Ответ C": '00'
     }
 }
 
 question_11_ru = {
     "question_text": question_11_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '0',
+        "Ответ B": '1',
+        "Ответ C": '00'
     }
 }
 
 question_12_ru = {
     "question_text": question_12_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '0'
     }
 }
 
 question_13_ru = {
     "question_text": question_13_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '0',
+        "Ответ B": '1',
+        "Ответ C": '00'
     }
 }
 
 question_14_ru = {
     "question_text": question_14_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '0',
+        "Ответ C": '00'
     }
 }
 
 question_15_ru = {
     "question_text": question_15_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '0'
     }
 }
 
 question_16_ru = {
     "question_text": question_16_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_17_ru = {
     "question_text": question_17_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_18_ru = {
     "question_text": question_18_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_19_ru = {
     "question_text": question_19_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 
 question_20_ru = {
     "question_text": question_20_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
-        "Ответ C": 0
+        "Ответ A": '00',
+        "Ответ B": '1',
+        "Ответ C": '0'
     }
 }
 

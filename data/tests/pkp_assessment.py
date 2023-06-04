@@ -132,86 +132,86 @@ C)Нет, они никогда не проходили тестирование
 question_1_ru = {
     "question_text": question_1_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 0,
-        "Ответ C": 0,
-        "Ответ D": 1
+        "Ответ A": '0',
+        "Ответ B": '000',
+        "Ответ C": '00',
+        "Ответ D": '1'
     }
 }
 
 question_2_ru = {
     "question_text": question_2_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0,
-        "Ответ D": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '000',
+        "Ответ D": '0'
     }
 }
 
 question_3_ru = {
     "question_text": question_3_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
-        "Ответ C": 0
+        "Ответ A": '1',
+        "Ответ B": '00',
+        "Ответ C": '0'
     }
 }
 
 question_4_ru = {
     "question_text": question_4_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
+        "Ответ A": '1',
+        "Ответ B": '0',
     }
 }
 
 question_5_ru = {
     "question_text": question_5_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
+        "Ответ A": '0',
+        "Ответ B": '1',
     }
 }
 
 question_6_ru = {
     "question_text": question_6_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
+        "Ответ A": '0',
+        "Ответ B": '1',
     }
 }
 
 question_7_ru = {
     "question_text": question_7_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 1,
+        "Ответ A": '0',
+        "Ответ B": '1',
     }
 }
 
 question_8_ru = {
     "question_text": question_8_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
+        "Ответ A": '1',
+        "Ответ B": '0',
     }
 }
 
 question_9_ru = {
     "question_text": question_9_ru_text,
     "answers": {
-        "Ответ A": 1,
-        "Ответ B": 0,
+        "Ответ A": '1',
+        "Ответ B": '0',
     }
 }
 
 question_10_ru = {
     "question_text": question_10_ru_text,
     "answers": {
-        "Ответ A": 0,
-        "Ответ B": 0,
-        "Ответ C": 1
+        "Ответ A": '0',
+        "Ответ B": '00',
+        "Ответ C": '1'
     }
 }
 
