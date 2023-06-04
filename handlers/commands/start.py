@@ -49,16 +49,17 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
     if current_state is None:
         return False
 
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    else:
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
 
-    async with state.proxy() as state_memory:
-        state_memory["data"].is_finished = False
-        state_memory["data"].datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
-        state_memory["data"] = state_memory["data"].to_dict()
-        await postgres_manager.add_new_test_results(state_memory["data"])
+        async with state.proxy() as state_memory:
+            state_memory["data"].is_finished = False
+            state_memory["data"].datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
+            state_memory["data"] = state_memory["data"].to_dict()
+            await postgres_manager.add_new_test_results(state_memory["data"])
 
-    await state.finish()
-    await message.delete()
+        await state.finish()
+        await message.delete()
 
 @dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state: FSMContext):
