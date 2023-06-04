@@ -58,7 +58,7 @@ class MenuKeyboardBuilder:
         if is_admin(user):
             self.__add_admin_menu()
 
-        self.__keyboard.add(order_vih_test_button, consult_button)
+        self.__keyboard.add(order_vih_test_button)
 
         return self.__keyboard
 
