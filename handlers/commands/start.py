@@ -53,7 +53,7 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
         try:
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
-            postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+            postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
             async with state.proxy() as state_memory:
                 state_memory["data"].is_finished = False
@@ -76,7 +76,7 @@ async def bot_start(message: types.Message, state: FSMContext):
     else:
         await cancel_test_handler(message, state)
 
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
         if not await postgres_manager.is_new_user(message.from_user):
             await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
@@ -89,7 +89,7 @@ async def bot_start(message: types.Message, state: FSMContext):
 @dp.message_handler(state=StateGroup.in_uik)
 async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
         await postgres_manager.add_user(message.from_user, uik=message.text)
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")

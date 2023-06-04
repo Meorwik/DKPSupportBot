@@ -40,7 +40,7 @@ async def handle_back_button(message: types.Message):
 async def start_menu(callback_query: types.CallbackQuery):
     menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(user=callback_query.from_user)
     await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с ботом!")
     logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
@@ -50,7 +50,7 @@ async def start_menu(callback_query: types.CallbackQuery):
 
 @dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
 async def handle_menu_buttons(message: types.Message):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(user=message.from_user)
 
     if message.text == MENU_BUTTONS_TEXTS["tests"]:
@@ -88,7 +88,7 @@ async def handle_menu_buttons(message: types.Message):
 @dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())
 async def handle_admin_menu(message: types.Message):
     if message.text == ADMIN_BUTTONS_TEXTS["get_users"]:
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
         saved_file_path = await postgres_manager.download_users_table()
 
         with open(saved_file_path, "rb") as users_data:
@@ -97,7 +97,7 @@ async def handle_admin_menu(message: types.Message):
 # ------------------------------HANDLE INFO MENU----------------------------------------------
 @dp.message_handler(lambda message: message.text in INFO_BUTTONS_TEXTS.values())
 async def handle_info_menu(message: types.Message):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(user=message.from_user)
 
     if message.text == INFO_BUTTONS_TEXTS["social_networks"]:
@@ -172,7 +172,7 @@ async def handle_tests_menu(message: types.Message):
 async def handle_language_selection(call: types.CallbackQuery, state: FSMContext):
     test_keyboard_builder = TestKeyboardBuilder()
     database_data = TestResults()
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(call.from_user)
     database_data.user_id = user[0][0]
 
@@ -235,7 +235,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         results = state_memory["results"]
         database_data = state_memory["data"]
 
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_test_db_connection_config())
+    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
     high_risk = results["high"]
     medium_risk = results["medium"]
