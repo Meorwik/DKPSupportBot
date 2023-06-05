@@ -56,7 +56,8 @@ class PostgresDataBaseManager(DataBaseManager):
             "username" VARCHAR (50),
             "first_name" VARCHAR (50),
             "last_name" VARCHAR (50),
-            "uik" VARCHAR(50)
+            "uik" VARCHAR(50),
+            "role" VARCHAR(50) NOT NULL DEFAULT "user"
             );
         """
 
@@ -140,6 +141,10 @@ class PostgresDataBaseManager(DataBaseManager):
     async def is_new_user(self, user):
         user_data = await self.get_user(user)
         return not user_data
+
+    async def get_user_uik(self, user):
+        user_data = await self.get_user(user)
+        return user_data[5]
 
     #------------ACTIONS WITH LOGS----------------
 
