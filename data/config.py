@@ -9,8 +9,32 @@ for admin in config_data["admins"].split():
 
 
 BOT_TOKEN = config_data["token"]
-ADMINS = admins
 
+ADMINS = admins
+CONSULTANTS = []
 
 def is_admin(user):
     return str(user.id) in ADMINS
+
+
+ROLE_NAMES = {
+    "user": "user",
+    "admin": "admin",
+    "consultant": "consultant"
+}
+
+ROLES = {
+    "admins": ADMINS,
+    "consultants": CONSULTANTS
+}
+
+ROLE_COMMANDS = {
+    "consultant_on": "!&consult",
+    "consultant_off": "!&consultoff",
+
+    "admin_on": "",
+    "admin_off": ""
+}
+
+
+

@@ -19,7 +19,7 @@ greeting_message = """
 """
 
 uik_info = """
-Если у вас нет УИКа, его можно составить по следующим инструкциям:
+У вас нет УИКа, его можно составить по следующим инструкциям:
 
 - Первые две буквы имени папы
 - Первые две буквы имени мамы
@@ -79,12 +79,15 @@ async def bot_start(message: types.Message, state: FSMContext):
         postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
         if not await postgres_manager.is_new_user(message.from_user):
-            print(await postgres_manager.get_user(user=message.from_user))
-            await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+            if await postgres_manager.get_user_uik(user=message.from_user) is not None:
+                await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
+            else:
+                await message.answer(uik_info)
+                await StateGroup.in_uik.set()
         else:
             await message.answer(greeting_message)
-            await message.answer(uik_info)
+            await message.answer("Если " + uik_info)
             await StateGroup.in_uik.set()
 
 @dp.message_handler(state=StateGroup.in_uik)

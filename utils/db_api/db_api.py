@@ -146,6 +146,17 @@ class PostgresDataBaseManager(DataBaseManager):
         user_data = await self.get_user(user)
         return user_data[5]
 
+    async def change_user_role(self, user, new_role):
+        await self.set_connection()
+        user_data = await self.get_user(user)
+        user_id = user_data[0][0]
+        change_user_role_sql = f"""
+        UPDATE users SET role = '{new_role}' WHERE id = {user_id}
+        """
+        self._cursor.execute(change_user_role_sql)
+        self._connection.commit()
+        await self.close_connection()
+        return True
     #------------ACTIONS WITH LOGS----------------
 
     async def database_log(self, user, action):
