@@ -14,12 +14,12 @@ greeting_message = """
 Здравствуйте!
 
 Я – бот, который поможет Вам оценить риск инфицирования ВИЧ и понять, нужны ли услуги по профилактике ВИЧ.
-
-Для того чтобы продолжить, введите пожалуйста ваш УИК.
 """
 
 uik_info = """
-У вас нет УИКа, его можно составить по следующим инструкциям:
+Для того чтобы продолжить, введите пожалуйста ваш УИК.
+
+Если у вас нет УИКа, его можно составить по следующим инструкциям:
 
 - Первые две буквы имени папы
 - Первые две буквы имени мамы
@@ -87,7 +87,7 @@ async def bot_start(message: types.Message, state: FSMContext):
                 await StateGroup.in_uik.set()
         else:
             await message.answer(greeting_message)
-            await message.answer("Если " + uik_info)
+            await message.answer(uik_info)
             await StateGroup.in_uik.set()
 
 @dp.message_handler(state=StateGroup.in_uik)
@@ -98,7 +98,7 @@ async def handle_uik(message: types.Message, state: FSMContext):
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")
         user = await postgres_manager.get_user(user=message.from_user)
-        await postgres_manager.database_log(user=user[0][0], action="Успешно добавлен в базу!")
+        await postgres_manager.database_log(user=user["id"], action="Успешно добавлен в базу!")
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
         await state.finish()

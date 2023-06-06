@@ -46,7 +46,7 @@ async def handle_get_consult_role_command(message: types.Message):
     elif ROLE_COMMANDS["consultant_off"]:
         user_data = await postgres_manager.get_user(message.from_user)
 
-        if user_data[0][6] != "user":
+        if user_data["role"] != "user":
             await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["user"])
 
 
@@ -69,7 +69,7 @@ async def start_menu(callback_query: types.CallbackQuery):
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(user=callback_query.from_user)
-    await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с ботом!")
+    await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с ботом!")
     logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
     await callback_query.message.delete()
 
@@ -107,7 +107,7 @@ async def handle_menu_buttons(message: types.Message):
     elif message.text == MENU_BUTTONS_TEXTS["order_vih_test"]:
         # Это все равно временный вариант, до того как мы не сделаем работу с API
         logging.info(f"Пользователь {message.from_user.id} Попытался заказать тест на ВИЧ!")
-        await postgres_manager.database_log(user=user[0][0], action="Попытался заказать тест на ВИЧ!")
+        await postgres_manager.database_log(user=user["id"], action="Попытался заказать тест на ВИЧ!")
 
         btn = InlineKeyboardButton("Перейти", url="https://hivtest.kz/")
         await message.answer('Заказать бесплатный тест', reply_markup=InlineKeyboardMarkup().add(btn))
@@ -117,7 +117,7 @@ async def handle_menu_buttons(message: types.Message):
 
     elif message.text == MENU_BUTTONS_TEXTS["contacting_consultant"]:
         logging.info(f"Пользователь {message.from_user.id} начал взаимодействие с консультантом!")
-        await postgres_manager.database_log(user=user[0][0], action="Начал взаимодействие с консультантом!")
+        await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с консультантом!")
 
 # ------------------------------HANDLE ADMIN MENU----------------------------------------------
 
@@ -147,7 +147,7 @@ async def handle_info_menu(message: types.Message):
 
     elif message.text == INFO_BUTTONS_TEXTS["tell_partner"]:
         logging.info(f"Пользователь {message.from_user.id} рассказал партнеру о важности тестирования")
-        await postgres_manager.database_log(user=user[0][0], action="Рассказал партнеру о важности тестирования")
+        await postgres_manager.database_log(user=user["id"], action="Рассказал партнеру о важности тестирования")
 
         product = SimpleKeyboardBuilder.get_tell_partner_keyboard()
         await message.answer(text=product["text"], reply_markup=product["keyboard"])
@@ -214,7 +214,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     database_data = TestResults()
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(call.from_user)
-    database_data.user_id = user[0][0]
+    database_data.user_id = user["id"]
 
     if "hiv_risk_assessment" in call.data:
         database_data.test_name = 'hiv_risk_assessment'
@@ -237,7 +237,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
         assessment = UnderstandingPLHIVAssessment()
 
     logging.info(f"Пользователь {call.from_user.id} начал тест: {database_data.test_name}")
-    await postgres_manager.database_log(user[0][0], f"Начал тест: {database_data.test_name}")
+    await postgres_manager.database_log(database_data.user_id, f"Начал тест: {database_data.test_name}")
     del postgres_manager
 
     if call.data.startswith("ru"):
@@ -304,7 +304,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         await postgres_manager.add_new_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data['test_name']}!")
         user = await postgres_manager.get_user(user=call.from_user)
-        await postgres_manager.database_log(user[0][0], action=f"Завершил тест {database_data['test_name']}!")
+        await postgres_manager.database_log(user['id'], action=f"Завершил тест {database_data['test_name']}!")
 
     else:
         await call.message.edit_text\

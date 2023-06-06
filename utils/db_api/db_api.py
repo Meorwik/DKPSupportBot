@@ -1,3 +1,4 @@
+from psycopg2.extras import RealDictCursor
 from pandas import DataFrame
 from psycopg2 import connect
 from datetime import datetime
@@ -37,7 +38,7 @@ class DataBaseManager:
                     port={self.config['port']}
                 """
             )
-        self._cursor = self._connection.cursor()
+        self._cursor = self._connection.cursor(cursor_factory=RealDictCursor)
         return self._connection
 
     async def close_connection(self):
@@ -144,11 +145,11 @@ class PostgresDataBaseManager(DataBaseManager):
 
     async def get_user_uik(self, user):
         user_data = await self.get_user(user)
-        return user_data[5]
+        return user_data["uik"]
 
     async def change_user_role(self, user, new_role):
         user_data = await self.get_user(user)
-        user_id = user_data[0][0]
+        user_id = user_data["id"]
         await self.set_connection()
         change_user_role_sql = f"""
         UPDATE users SET role = '{new_role}' WHERE id = {user_id}
@@ -234,4 +235,4 @@ class PostgresDataBaseManager(DataBaseManager):
     async def download_users_table(self):
         file_name = "users"
         users = await self.get_all_users()
-        return await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)
+        return await DataConvertor().convert_to_exel(users.values(), users.keys(), file_name)
