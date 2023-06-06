@@ -17,6 +17,7 @@ class DataConvertor:
             data_frame.to_excel(file_path)
             return file_path
         except PermissionError:
+            print("PermissionError")
             return file_path
 
 # КЛАСС: DataBaseManager
@@ -235,4 +236,5 @@ class PostgresDataBaseManager(DataBaseManager):
     async def download_users_table(self):
         file_name = "users"
         users = await self.get_all_users()
-        return await DataConvertor().convert_to_exel(users.values(), users.keys(), file_name)
+        print(users)
+        return await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)
