@@ -127,7 +127,7 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.set_connection()
         sql_get_user = f"SELECT * FROM users WHERE user_id = '{user.id}'"
         self._cursor.execute(sql_get_user)
-        result = self._cursor.fetchall()
+        result = self._cursor.fetchone()
         await self.close_connection()
         return result
 
