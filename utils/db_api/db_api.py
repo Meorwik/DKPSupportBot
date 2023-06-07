@@ -3,7 +3,7 @@ from pandas import DataFrame
 from psycopg2 import connect
 from datetime import datetime
 
-DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name", "uik"]
+DB_USERS_COLUMNS = ["id", "user_id", "username", "first_name", "last_name", "uik", "role"]
 DB_TESTS_COLUMNS = ["id", "user_id", "test_name", "language", "is_finished", "result", "datetime"]
 DB_LOGS_COLUMNS = ["id", "user_id", "action", "datetime"]
 
