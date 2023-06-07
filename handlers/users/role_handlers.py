@@ -1,5 +1,6 @@
 from data.config import ROLE_COMMANDS, ROLES, ROLE_NAMES
 from aiogram import types
+from loader import dp
 
 def filter_consultant_role_commands(message: types.Message):
     if ROLE_COMMANDS["consultant_on"] in message.text:
