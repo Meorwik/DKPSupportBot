@@ -5,3 +5,4 @@ class StateGroup(StatesGroup):
     in_test = State()
     in_uik = State()
     in_consult = State()
+    is_consultant = State()

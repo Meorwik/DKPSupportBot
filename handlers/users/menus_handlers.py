@@ -74,12 +74,14 @@ async def handle_menu_buttons(message: types.Message):
         logging.info(f"Пользователь {message.from_user.id} начал взаимодействие с консультантом!")
         await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с консультантом!")
 
-        await message.answer("Консультант подключается...", reply_markup=ReplyKeyboardRemove())
+        msg = await message.answer("Консультант подключается...", reply_markup=ReplyKeyboardRemove())
         await sleep(delay=1.2)
+        await msg.delete()
         await message.answer("""
         Здравствуйте! Меня зовут Михаил. Готов ответить на Ваши вопросы.
         """)
         await StateGroup.in_consult.set()
+
 # ------------------------------HANDLE ADMIN MENU----------------------------------------------
 
 @dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())

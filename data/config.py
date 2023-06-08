@@ -11,7 +11,10 @@ for admin in config_data["admins"].split():
 BOT_TOKEN = config_data["token"]
 
 ADMINS = admins
-CONSULTANTS = []
+
+# need to ask consultant his ID
+# my temp id here
+CONSULTANTS = [912239061]
 
 def is_admin(user):
     return str(user.id) in ADMINS
