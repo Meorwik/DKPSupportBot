@@ -74,7 +74,7 @@ async def send_message_to_consultant(message: types.Message):
     consultants = ROLES["consultants"]
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user_uik = await postgres_manager.get_user_uik(message.from_user)
-    from_user = f"От пациента\nУИК: {user_uik}\nID: {message.from_user.id}"
+    from_user = f"От пациента\nУИК: {user_uik}\nID: {message.from_user.id}\n"
 
     for i in consultants:
         await bot.send_message(
