@@ -1,6 +1,6 @@
 from keyboards.default.default_keyboards import MENU_BUTTONS_TEXTS, MenuKeyboardBuilder, \
     TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder
 from utils.db_api.connection_configs import ConnectionConfig
 from aiogram.utils.exceptions import MessageToDeleteNotFound
@@ -9,6 +9,7 @@ from utils.misc.logging import logging
 from states.states import StateGroup
 from contextlib import suppress
 from loader import dp, bot
+from asyncio import sleep
 from aiogram import types
 
 
@@ -73,6 +74,12 @@ async def handle_menu_buttons(message: types.Message):
         logging.info(f"Пользователь {message.from_user.id} начал взаимодействие с консультантом!")
         await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с консультантом!")
 
+        await message.answer("Консультант подключается...", reply_markup=ReplyKeyboardRemove())
+        await sleep(delay=1.2)
+        await message.answer("""
+        Здравствуйте! Меня зовут Михаил. Готов ответить на Ваши вопросы.
+        """)
+        await StateGroup.in_consult.set()
 # ------------------------------HANDLE ADMIN MENU----------------------------------------------
 
 @dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())
