@@ -25,12 +25,6 @@ reply_instruction = """
 Чтобы сделать reply, смахните сообщение пациента влево.
 """
 
-message_for_consultant = """
-
-От пациента
-УИК: %uik
-ID: %id
-"""
 
 def filter_consultant_commands(message: types.Message):
     if ROLE_COMMANDS["consultant_on"] == message.text:
@@ -82,5 +76,14 @@ async def send_message_to_consultant(message: types.Message):
     user_uik = await postgres_manager.get_user_uik(message.from_user)
 
     for i in consultants:
-        await bot.send_message(text=message_for_consultant % (message.from_user.id, user_uik), chat_id=i)
+        await bot.send_message(
+            text=f"""
+                {message.text}
+            
+                От пациента
+                УИК: {user_uik}
+                ID: {message.from_user.id}
+            """,
+            chat_id=i
+        )
 
