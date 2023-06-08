@@ -79,9 +79,7 @@ async def send_message_to_consultant(message: types.Message):
     for i in consultants:
         await bot.send_message(
             text=f"""
-                {message.text}
-                
-                {from_user}
+                {message.text}\n{from_user}
             """,
             chat_id=i
         )
