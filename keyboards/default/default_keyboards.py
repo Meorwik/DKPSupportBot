@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from data.config import ROLE_COMMANDS
 from data.config import is_admin
 
 TESTS_BUTTONS_TEXTS = {
@@ -28,6 +29,7 @@ MENU_BUTTONS_TEXTS = {
     "contacting_consultant": "👤 Обращение к консультанту",
     "rate_bot": '✨ Оценить бота',
 }
+
 
 # КЛАСС: MenuKeyboardBuilder
 # Создан для работы с клавиатурами, создает клавиатуры для меню и его разделов.
@@ -98,4 +100,10 @@ class MenuKeyboardBuilder:
         self.__keyboard.add(social_networks_button, project_news_button, tell_partner_button, info_files_button)
         self.__add_back_button()
 
+        return self.__keyboard
+
+    def get_consultant_menu(self):
+        self.__keyboard.clean()
+        consult_off_button = KeyboardButton(ROLE_COMMANDS["consultant_off"])
+        self.__keyboard.add(consult_off_button)
         return self.__keyboard

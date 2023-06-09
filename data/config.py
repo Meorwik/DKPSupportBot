@@ -14,7 +14,7 @@ ADMINS = admins
 
 # need to ask consultant his ID
 # my temp id here
-CONSULTANTS = [912239061]
+CONSULTANT = 912239061
 
 def is_admin(user):
     return str(user.id) in ADMINS
@@ -28,7 +28,7 @@ ROLE_NAMES = {
 
 ROLES = {
     "admins": ADMINS,
-    "consultants": CONSULTANTS
+    "consultant": CONSULTANT
 }
 
 ROLE_COMMANDS = {
