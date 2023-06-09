@@ -7,7 +7,7 @@ from states.states import StateGroup
 from loader import dp, bot
 from aiogram import types
 
-# --------------------------------------CONSULTANT ROLE HANDLERS -----------------------------------------------
+# --------------------------------------CONSULTANT HANDLERS -----------------------------------------------
 
 greeting_consultant_message = """
 Теперь вы стали консультантом !
@@ -29,10 +29,8 @@ reply_instruction = """
 def filter_consultant_commands(message: types.Message):
     if ROLE_COMMANDS["consultant_on"] == message.text:
         return True
-
     elif ROLE_COMMANDS["consultant_off"] == message.text:
         return True
-
     else:
         return False
 
@@ -45,16 +43,15 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
         await message.answer(greeting_consultant_message)
         await message.answer(consultant_instructions_message)
         await message.answer(reply_instruction)
-        await StateGroup.in_consult.set()
+
+        await state.finish()
+        await StateGroup.is_consultant.set()
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
-        user_data = await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
-        await state.finish()
+        await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
         await message.answer("Теперь вы не консультант!", reply_markup=SimpleKeyboardBuilder.get_back_to_menu_keyboard())
+        await state.finish()
 
-        if user_data["role"] != "user":
-            await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["user"])
-            await StateGroup.is_consultant.set()
 
 
 @dp.message_handler(state=StateGroup.is_consultant)
@@ -78,9 +75,7 @@ async def send_message_to_consultant(message: types.Message):
 
     for i in consultants:
         await bot.send_message(
-            text=f"""
-                {message.text}\n{from_user}
-            """,
+            text=f"{message.text}\n\n{from_user}",
             chat_id=i
         )
 
