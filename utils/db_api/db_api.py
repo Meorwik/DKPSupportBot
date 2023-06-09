@@ -124,6 +124,16 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.download_users_table()
         return True
 
+    async def update_user_uik(self, user, uik):
+        await self.set_connection()
+        add_uik_to_user_sql = f"""
+        UPDATE users SET uik = '{uik}' WHERE user_id = {user.id}
+        """
+        self._cursor.execute(add_uik_to_user_sql)
+        self._connection.commit()
+        await self.close_connection()
+        return True
+
     async def get_user(self, user):
         await self.set_connection()
         sql_get_user = f"SELECT * FROM users WHERE user_id = '{user.id}'"
