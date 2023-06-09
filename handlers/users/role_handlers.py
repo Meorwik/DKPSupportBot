@@ -5,7 +5,7 @@ from data.config import ROLE_COMMANDS, ROLES, ROLE_NAMES
 from utils.db_api.db_api import PostgresDataBaseManager
 from aiogram.types import ReplyKeyboardRemove
 from aiogram.dispatcher import FSMContext
-from states.states import StateGroup
+from states.states import StateGroup, RoleStates
 from loader import dp, bot
 from aiogram import types
 
@@ -42,15 +42,13 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 
     if message.text == ROLE_COMMANDS["consultant_on"]:
         consult_menu_keyboard = MenuKeyboardBuilder().get_consultant_menu()
-        past_consultant = await postgres_manager.get_current_consultant()
-        await postgres_manager.change_user_role(past_consultant["user_id"], new_role=ROLE_NAMES["user"])
         await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["consultant"])
         await message.answer(greeting_consultant_message, reply_markup=ReplyKeyboardRemove())
         await message.answer(consultant_instructions_message)
         await message.answer(reply_instruction, reply_markup=consult_menu_keyboard)
 
         await state.finish()
-        await StateGroup.is_consultant.set()
+        await RoleStates.is_consultant.set()
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
         user = await postgres_manager.get_user(message.from_user.id)
@@ -62,7 +60,7 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 
 
 
-@dp.message_handler(state=StateGroup.is_consultant)
+@dp.message_handler(state=RoleStates.is_consultant)
 async def handle_consultant_messages(message: types.Message):
     if message["reply_to_message"] is not None:
         await bot.send_message(
