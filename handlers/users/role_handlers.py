@@ -51,13 +51,9 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
         await RoleStates.is_consultant.set()
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
-        user = await postgres_manager.get_user(message.from_user.id)
-        user_role = user["role"]
-        if user_role == ROLE_NAMES["consultant"]:
-            await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
-            await message.answer("Теперь вы не консультант!", reply_markup=SimpleKeyboardBuilder.get_back_to_menu_keyboard())
-            await state.finish()
-
+        await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
+        await message.answer("Теперь вы не консультант!", reply_markup=SimpleKeyboardBuilder.get_back_to_menu_keyboard())
+        await state.finish()
 
 
 @dp.message_handler(state=RoleStates.is_consultant)
