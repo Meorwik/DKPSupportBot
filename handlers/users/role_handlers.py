@@ -59,11 +59,14 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 @dp.message_handler(state=RoleStates.is_consultant)
 async def handle_consultant_messages(message: types.Message):
     if message["reply_to_message"] is not None:
-        await bot.send_message(
-            chat_id=message.reply_to_message.from_user.id,
-            text=f"Ответ от консультанта:\n\n{message.text}"
-        )
+        start_index = message.reply_to_message.text.find("ID:") + len("ID:")
+        user_id = int(message.reply_to_message.text[start_index: ])
+        cut_off_index = message.reply_to_message.text.find("\nОт пациента\nУИК:")
 
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"Ответ консультанта на сообщение:\n{message.reply_to_message.text[:cut_off_index]}\n\n{message.text}"
+        )
 
     else:
         await message.answer(consultant_instructions_message)
@@ -74,7 +77,6 @@ async def handle_consultant_messages(message: types.Message):
 async def send_message_to_consultant(message: types.Message):
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     consultant = await postgres_manager.get_current_consultant()
-    print(consultant)
     user_uik = await postgres_manager.get_user_uik(message.from_user)
     from_user = f"От пациента\nУИК: {user_uik}\nID: {message.from_user.id}\n"
 

@@ -30,10 +30,6 @@ async def handle_back_button(message: types.Message):
 async def start_menu(callback_query: types.CallbackQuery):
     menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-    user = await postgres_manager.get_user(callback_query.from_user.id)
-    await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с ботом!")
-    logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
     await callback_query.message.delete()
 
 # ------------------------------HANDLE MAIN MENU----------------------------------------------

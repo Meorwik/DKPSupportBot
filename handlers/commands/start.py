@@ -67,9 +67,10 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
         await state.finish()
         await message.delete()
 
-@dp.message_handler(CommandStart(), state=StateGroup)
+@dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state: FSMContext):
     if not message.from_user.username:
+        await state.finish()
         empty_login_keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton("Перейти", url=login_instruction_link))
         await message.answer(text=empty_login_text, reply_markup=empty_login_keyboard)
 
