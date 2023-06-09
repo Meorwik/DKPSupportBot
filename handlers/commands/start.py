@@ -95,15 +95,17 @@ async def bot_start(message: types.Message, state: FSMContext):
 async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
         postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-
+        try:
+            await postgres_manager.add_user(message.from_user, message.text)
+        except:
+            pass
         user = await postgres_manager.get_user(message.from_user.id)
-        if user:
-            if user["uik"] is None:
-                await postgres_manager.update_user_uik(message.from_user, uik=message.text)
+
+        if user["uik"] is None:
+            await postgres_manager.update_user_uik(message.from_user, uik=message.text)
 
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")
-        user = await postgres_manager.get_user(user_id=message.from_user.id)
         await postgres_manager.database_log(user=user["id"], action="Успешно добавлен в базу!")
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
