@@ -134,9 +134,9 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.close_connection()
         return True
 
-    async def get_user(self, user):
+    async def get_user(self, user_id):
         await self.set_connection()
-        sql_get_user = f"SELECT * FROM users WHERE user_id = '{user.id}'"
+        sql_get_user = f"SELECT * FROM users WHERE user_id = '{user_id}'"
         self._cursor.execute(sql_get_user)
         result = self._cursor.fetchone()
         await self.close_connection()
@@ -151,15 +151,15 @@ class PostgresDataBaseManager(DataBaseManager):
         return result
 
     async def is_new_user(self, user):
-        user_data = await self.get_user(user)
+        user_data = await self.get_user(user.id)
         return not user_data
 
     async def get_user_uik(self, user):
-        user_data = await self.get_user(user)
+        user_data = await self.get_user(user.id)
         return user_data["uik"]
 
     async def change_user_role(self, user, new_role):
-        user_data = await self.get_user(user)
+        user_data = await self.get_user(user.id)
         user_id = user_data["id"]
         await self.set_connection()
         change_user_role_sql = f"""

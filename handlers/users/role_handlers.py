@@ -42,6 +42,8 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 
     if message.text == ROLE_COMMANDS["consultant_on"]:
         consult_menu_keyboard = MenuKeyboardBuilder().get_consultant_menu()
+        past_consultant = await postgres_manager.get_current_consultant()
+        await postgres_manager.change_user_role(past_consultant["user_id"], new_role=ROLE_NAMES["user"])
         await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["consultant"])
         await message.answer(greeting_consultant_message, reply_markup=ReplyKeyboardRemove())
         await message.answer(consultant_instructions_message)
@@ -51,7 +53,7 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
         await StateGroup.is_consultant.set()
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
-        user = await postgres_manager.get_user(message.from_user)
+        user = await postgres_manager.get_user(message.from_user.id)
         user_role = user["role"]
         if user_role == ROLE_NAMES["consultant"]:
             await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])

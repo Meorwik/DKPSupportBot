@@ -24,7 +24,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     test_keyboard_builder = TestKeyboardBuilder()
     database_data = TestResults()
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-    user = await postgres_manager.get_user(call.from_user)
+    user = await postgres_manager.get_user(call.from_user.id)
     database_data.user_id = user["id"]
 
     if "hiv_risk_assessment" in call.data:
@@ -112,7 +112,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         database_data = database_data.to_dict()
         await postgres_manager.add_new_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data['test_name']}!")
-        user = await postgres_manager.get_user(user=call.from_user)
+        user = await postgres_manager.get_user(call.from_user.id)
         await postgres_manager.database_log(user['id'], action=f"Завершил тест {database_data['test_name']}!")
 
     else:

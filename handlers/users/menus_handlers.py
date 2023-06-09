@@ -31,7 +31,7 @@ async def start_menu(callback_query: types.CallbackQuery):
     menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-    user = await postgres_manager.get_user(user=callback_query.from_user)
+    user = await postgres_manager.get_user(callback_query.from_user.id)
     await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с ботом!")
     logging.info(f"Пользователь {callback_query.from_user.id} начал взаимодействие с ботом!")
     await callback_query.message.delete()
@@ -41,7 +41,7 @@ async def start_menu(callback_query: types.CallbackQuery):
 @dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
 async def handle_menu_buttons(message: types.Message):
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-    user = await postgres_manager.get_user(user=message.from_user)
+    user = await postgres_manager.get_user(message.from_user.id)
 
     async def delete_past_messages(msg: types.Message):
         with suppress(MessageToDeleteNotFound):
@@ -97,7 +97,7 @@ async def handle_admin_menu(message: types.Message):
 @dp.message_handler(lambda message: message.text in INFO_BUTTONS_TEXTS.values())
 async def handle_info_menu(message: types.Message):
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-    user = await postgres_manager.get_user(user=message.from_user)
+    user = await postgres_manager.get_user(message.from_user.id)
 
     if message.text == INFO_BUTTONS_TEXTS["social_networks"]:
         product = SimpleKeyboardBuilder.get_social_networks_keyboard()
