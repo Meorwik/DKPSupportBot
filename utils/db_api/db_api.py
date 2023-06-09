@@ -159,6 +159,17 @@ class PostgresDataBaseManager(DataBaseManager):
         self._connection.commit()
         await self.close_connection()
         return True
+
+    async def get_current_consultant(self):
+        await self.set_connection()
+        get_current_consultant_sql = """
+        SELECT * FROM users WHERE role = 'consultant'
+        """
+        self._cursor.execute(get_current_consultant_sql)
+        result = self._cursor.fetchone()
+        await self.close_connection()
+        return result
+
     #------------ACTIONS WITH LOGS----------------
 
     async def database_log(self, user, action):

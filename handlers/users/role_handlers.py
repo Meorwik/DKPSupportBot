@@ -48,9 +48,12 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
         await StateGroup.is_consultant.set()
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
-        await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
-        await message.answer("Теперь вы не консультант!", reply_markup=SimpleKeyboardBuilder.get_back_to_menu_keyboard())
-        await state.finish()
+        user_role = await postgres_manager.get_user(message.from_user)["role"]
+
+        if user_role == ROLE_NAMES["consultant"]:
+            await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
+            await message.answer("Теперь вы не консультант!", reply_markup=SimpleKeyboardBuilder.get_back_to_menu_keyboard())
+            await state.finish()
 
 
 
@@ -70,12 +73,19 @@ async def handle_consultant_messages(message: types.Message):
 async def send_message_to_consultant(message: types.Message):
     consultants = ROLES["consultants"]
     postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+    consultant = await postgres_manager.get_current_consultant()
+    print(consultant)
     user_uik = await postgres_manager.get_user_uik(message.from_user)
     from_user = f"От пациента\nУИК: {user_uik}\nID: {message.from_user.id}\n"
 
-    for i in consultants:
-        await bot.send_message(
-            text=f"{message.text}\n\n{from_user}",
-            chat_id=i
-        )
+    await bot.send_message(
+        text=f"{message.text}\n\n{from_user}",
+        chat_id=consultant["id"]
+    )
 
+    # for i in consultants:
+    #     await bot.send_message(
+    #         text=f"{message.text}\n\n{from_user}",
+    #         chat_id=i
+    #     )
+    #
