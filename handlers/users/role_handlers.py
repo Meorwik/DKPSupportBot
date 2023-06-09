@@ -65,8 +65,10 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 @dp.message_handler(state=StateGroup.is_consultant)
 async def handle_consultant_messages(message: types.Message):
     if message["reply_to_message"] is not None:
-        # reply send to user
-        pass
+        await bot.send_message(
+            chat_id=message.reply_to_message.from_user.id,
+            text=f"Ответ от консультанта:\n\n{message.text}"
+        )
 
 
     else:
