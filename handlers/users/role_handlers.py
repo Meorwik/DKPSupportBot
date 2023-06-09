@@ -83,13 +83,12 @@ async def send_message_to_consultant(message: types.Message):
     try:
         await bot.send_message(
             text=f"{message.text}\n\n{from_user}",
-            chat_id=consultant["id"]
+            chat_id=consultant["user_id"]
         )
 
     except TypeError:
-        consultants = ROLES["consultant"]
-        for i in consultants:
-            await bot.send_message(
-                text=f"{message.text}\n\n{from_user}",
-                chat_id=i
-            )
+        consultant = ROLES["consultant"]
+        await bot.send_message(
+            text=f"{message.text}\n\n{from_user}",
+            chat_id=consultant
+        )
