@@ -21,7 +21,6 @@ async def handle_error_situation(callback: types.CallbackQuery):
 async def handle_back_button(message: types.Message):
     if message.text == BACK_BUTTONS_TEXTS["back_to_menu"]:
         await message.delete()
-        await state.finish()
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
