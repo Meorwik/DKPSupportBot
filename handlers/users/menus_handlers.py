@@ -1,14 +1,12 @@
 from keyboards.default.default_keyboards import MENU_BUTTONS_TEXTS, MenuKeyboardBuilder, \
-    TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS
+    TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS, BACK_BUTTONS_TEXTS
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder
-from utils.db_api.connection_configs import ConnectionConfig
 from aiogram.utils.exceptions import MessageToDeleteNotFound
-from utils.db_api.db_api import PostgresDataBaseManager
+from loader import dp, bot, postgres_manager
 from utils.misc.logging import logging
 from states.states import StateGroup
 from contextlib import suppress
-from loader import dp, bot
 from asyncio import sleep
 from aiogram import types
 
@@ -19,10 +17,11 @@ async def handle_error_situation(callback: types.CallbackQuery):
     await callback.message.delete()
     logging.info(f"Пользователь {call.from_user.id} получил ошибку!!!!!!!")
 
-@dp.message_handler(lambda message: message.text == "Назад в меню ⬅️")
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS.values())
 async def handle_back_button(message: types.Message):
-    if message.text == "Назад в меню ⬅️":
+    if message.text == BACK_BUTTONS_TEXTS["back_to_menu"]:
         await message.delete()
+        await state.finish()
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
@@ -36,7 +35,6 @@ async def start_menu(callback_query: types.CallbackQuery):
 
 @dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
 async def handle_menu_buttons(message: types.Message):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(message.from_user.id)
 
     async def delete_past_messages(msg: types.Message):
@@ -75,7 +73,7 @@ async def handle_menu_buttons(message: types.Message):
         await msg.delete()
         await message.answer("""
         Здравствуйте! Меня зовут Михаил. Готов ответить на Ваши вопросы.
-        """)
+        """, reply_markup=MenuKeyboardBuilder().get_end_conversation_keyboard())
         await StateGroup.in_consult.set()
 
 # ------------------------------HANDLE ADMIN MENU----------------------------------------------
@@ -83,7 +81,6 @@ async def handle_menu_buttons(message: types.Message):
 @dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())
 async def handle_admin_menu(message: types.Message):
     if message.text == ADMIN_BUTTONS_TEXTS["get_users"]:
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
         saved_file_path = await postgres_manager.download_users_table()
 
         with open(saved_file_path, "rb") as users_data:
@@ -92,7 +89,6 @@ async def handle_admin_menu(message: types.Message):
 # ------------------------------HANDLE INFO MENU----------------------------------------------
 @dp.message_handler(lambda message: message.text in INFO_BUTTONS_TEXTS.values())
 async def handle_info_menu(message: types.Message):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(message.from_user.id)
 
     if message.text == INFO_BUTTONS_TEXTS["social_networks"]:

@@ -1,12 +1,11 @@
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder
 from keyboards.default.default_keyboards import MenuKeyboardBuilder
-from utils.db_api.connection_configs import ConnectionConfig
+from keyboards.default.default_keyboards import BACK_BUTTONS_TEXTS
 from data.config import ROLE_COMMANDS, ROLES, ROLE_NAMES
-from utils.db_api.db_api import PostgresDataBaseManager
-from aiogram.types import ReplyKeyboardRemove
-from aiogram.dispatcher import FSMContext
 from states.states import StateGroup, RoleStates
-from loader import dp, bot
+from aiogram.types import ReplyKeyboardRemove
+from loader import dp, bot, postgres_manager
+from aiogram.dispatcher import FSMContext
 from aiogram import types
 
 # --------------------------------------CONSULTANT HANDLERS -----------------------------------------------
@@ -27,7 +26,7 @@ reply_instruction = """
 Чтобы сделать reply, смахните сообщение пациента влево.
 """
 
-
+# ----------------------------CONSULTANT SIDE-------------------
 def filter_consultant_commands(message: types.Message):
     if ROLE_COMMANDS["consultant_on"] == message.text:
         return True
@@ -38,8 +37,6 @@ def filter_consultant_commands(message: types.Message):
 
 @dp.message_handler(filter_consultant_commands, state="*")
 async def handle_get_consult_role_command(message: types.Message, state: FSMContext):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-
     if message.text == ROLE_COMMANDS["consultant_on"]:
         consult_menu_keyboard = MenuKeyboardBuilder().get_consultant_menu()
         await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["consultant"])
@@ -72,23 +69,46 @@ async def handle_consultant_messages(message: types.Message):
         await message.answer(consultant_instructions_message)
         await message.answer(reply_instruction)
 
-
-@dp.message_handler(state=StateGroup.in_consult)
-async def send_message_to_consultant(message: types.Message):
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+# ----------------------CLIENT SIDE-------------------------
+async def get_current_consultant():
     consultant = await postgres_manager.get_current_consultant()
+    if bool(consultant) is False:
+        consultant = ROLES["consultant"]
+        return consultant
+
+    else:
+        return consultant["user_id"]
+
+async def send_message_to_consultant(message: types.Message):
+    consultant = await get_current_consultant()
     user_uik = await postgres_manager.get_user_uik(message.from_user)
     from_user = f"От пациента\nУИК: {user_uik}\nID: {message.from_user.id}\n"
 
-    try:
-        await bot.send_message(
-            text=f"{message.text}\n\n{from_user}",
-            chat_id=consultant["user_id"]
-        )
+    await bot.send_message(
+        text=f"{message.text}\n\n{from_user}",
+        chat_id=consultant
+    )
 
-    except TypeError:
-        consultant = ROLES["consultant"]
-        await bot.send_message(
-            text=f"{message.text}\n\n{from_user}",
-            chat_id=consultant
-        )
+async def send_end_conversation_message_to_consultant(message: types.Message):
+    consultant = await get_current_consultant()
+    user_uik = await postgres_manager.get_user_uik(message.from_user)
+    quit_message = f"Пациент {user_uik}\n**Завершил общение!**"
+
+    await bot.send_message(
+        text=quit_message,
+        chat_id=consultant,
+        parse_mode="Markdown"
+    )
+
+    await message.delete()
+    await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+
+@dp.message_handler(state=StateGroup.in_consult)
+async def handle_consultant_conversation(message: types.Message, state: FSMContext):
+    if message.text == BACK_BUTTONS_TEXTS['end_conversation']:
+        await send_end_conversation_message_to_consultant(message)
+        await state.finish()
+
+    else:
+        await send_message_to_consultant(message)
+

@@ -1,13 +1,11 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.default.default_keyboards import MenuKeyboardBuilder
-from utils.db_api.connection_configs import ConnectionConfig
 from aiogram.dispatcher.filters.builtin import CommandStart
-from utils.db_api.db_api import PostgresDataBaseManager
+from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
 from datetime import datetime
-from loader import dp, bot
 from aiogram import types
 
 greeting_message = """
@@ -53,8 +51,6 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
         try:
             await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
-            postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-
             async with state.proxy() as state_memory:
                 state_memory["data"].is_finished = False
                 state_memory["data"].datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
@@ -77,8 +73,6 @@ async def bot_start(message: types.Message, state: FSMContext):
     else:
         await cancel_test_handler(message, state)
 
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-
         if not await postgres_manager.is_new_user(message.from_user):
             if await postgres_manager.get_user_uik(user=message.from_user) is not None:
                 await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
@@ -94,7 +88,6 @@ async def bot_start(message: types.Message, state: FSMContext):
 @dp.message_handler(state=StateGroup.in_uik)
 async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
         try:
             await postgres_manager.add_user(message.from_user, message.text)
         except:

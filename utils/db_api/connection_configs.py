@@ -16,7 +16,6 @@ class ConnectionConfig:
         # }
         #
         # return postgres_connection_config
-
         return cls.get_test_db_connection_config()
 
     @classmethod

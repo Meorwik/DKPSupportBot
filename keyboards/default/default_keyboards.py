@@ -31,6 +31,11 @@ MENU_BUTTONS_TEXTS = {
 }
 
 
+BACK_BUTTONS_TEXTS = {
+    "back_to_menu": "Назад в меню ⬅️",
+    "end_conversation": "Закончить общение"
+}
+
 # КЛАСС: MenuKeyboardBuilder
 # Создан для работы с клавиатурами, создает клавиатуры для меню и его разделов.
 class MenuKeyboardBuilder:
@@ -44,7 +49,7 @@ class MenuKeyboardBuilder:
         return True
 
     def __add_back_button(self):
-        back_button = KeyboardButton("Назад в меню ⬅️")
+        back_button = KeyboardButton(BACK_BUTTONS_TEXTS["back_to_menu"])
         self.__keyboard.add(back_button)
     def get_main_menu_keyboard(self, user):
         self.__keyboard.clean()
@@ -107,3 +112,8 @@ class MenuKeyboardBuilder:
         consult_off_button = KeyboardButton(ROLE_COMMANDS["consultant_off"])
         self.__keyboard.add(consult_off_button)
         return self.__keyboard
+
+    def get_end_conversation_keyboard(self):
+        self.__keyboard.clean()
+        end_conversation_button = KeyboardButton(BACK_BUTTONS_TEXTS["end_conversation"])
+        return self.__keyboard.add(end_conversation_button)

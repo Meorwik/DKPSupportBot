@@ -6,15 +6,13 @@ from data.tests.test_manager import \
     PkpAssessment, \
     UnderstandingPLHIVAssessment
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, TestKeyboardBuilder
-from utils.db_api.connection_configs import ConnectionConfig
-from utils.db_api.db_api import PostgresDataBaseManager
 from utils.test_results_tamplate import TestResults
 from aiogram.dispatcher import FSMContext
+from loader import dp, postgres_manager
 from utils.misc.logging import logging
 from states.states import StateGroup
 from datetime import datetime
 from aiogram import types
-from loader import dp
 
 
 # ---------------------------TESTS HANDLERS-----------------------------------------------
@@ -23,7 +21,6 @@ from loader import dp
 async def handle_language_selection(call: types.CallbackQuery, state: FSMContext):
     test_keyboard_builder = TestKeyboardBuilder()
     database_data = TestResults()
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
     user = await postgres_manager.get_user(call.from_user.id)
     database_data.user_id = user["id"]
 
@@ -83,8 +80,6 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         question_number = state_memory["question_number"]
         results = state_memory["results"]
         database_data = state_memory["data"]
-
-    postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
 
     high_risk = results["high"]
     medium_risk = results["medium"]
