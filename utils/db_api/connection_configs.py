@@ -16,6 +16,7 @@ class ConnectionConfig:
         }
 
         return postgres_connection_config
+        # return cls.get_test_db_connection_config()
 
     @classmethod
     def get_localhost_connection_config(cls):

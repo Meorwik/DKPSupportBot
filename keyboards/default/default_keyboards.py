@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from data.config import ROLE_COMMANDS
 from data.config import is_admin
 
 TESTS_BUTTONS_TEXTS = {
@@ -29,6 +30,12 @@ MENU_BUTTONS_TEXTS = {
     "rate_bot": '✨ Оценить бота',
 }
 
+
+BACK_BUTTONS_TEXTS = {
+    "back_to_menu": "Назад в меню ⬅️",
+    "end_conversation": "Закончить общение"
+}
+
 # КЛАСС: MenuKeyboardBuilder
 # Создан для работы с клавиатурами, создает клавиатуры для меню и его разделов.
 class MenuKeyboardBuilder:
@@ -42,7 +49,7 @@ class MenuKeyboardBuilder:
         return True
 
     def __add_back_button(self):
-        back_button = KeyboardButton("Назад в меню ⬅️")
+        back_button = KeyboardButton(BACK_BUTTONS_TEXTS["back_to_menu"])
         self.__keyboard.add(back_button)
     def get_main_menu_keyboard(self, user):
         self.__keyboard.clean()
@@ -58,7 +65,7 @@ class MenuKeyboardBuilder:
         if is_admin(user):
             self.__add_admin_menu()
 
-        self.__keyboard.add(order_vih_test_button)
+        self.__keyboard.add(order_vih_test_button, consult_button)
 
         return self.__keyboard
 
@@ -99,3 +106,14 @@ class MenuKeyboardBuilder:
         self.__add_back_button()
 
         return self.__keyboard
+
+    def get_consultant_menu(self):
+        self.__keyboard.clean()
+        consult_off_button = KeyboardButton(ROLE_COMMANDS["consultant_off"])
+        self.__keyboard.add(consult_off_button)
+        return self.__keyboard
+
+    def get_end_conversation_keyboard(self):
+        self.__keyboard.clean()
+        end_conversation_button = KeyboardButton(BACK_BUTTONS_TEXTS["end_conversation"])
+        return self.__keyboard.add(end_conversation_button)

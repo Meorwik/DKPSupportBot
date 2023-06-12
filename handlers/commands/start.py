@@ -1,24 +1,23 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.default.default_keyboards import MenuKeyboardBuilder
-from utils.db_api.connection_configs import ConnectionConfig
+from aiogram.utils.exceptions import MessageToDeleteNotFound
 from aiogram.dispatcher.filters.builtin import CommandStart
-from utils.db_api.db_api import PostgresDataBaseManager
+from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from states.states import StateGroup
 from datetime import datetime
-from loader import dp, bot
 from aiogram import types
 
 greeting_message = """
 Здравствуйте!
 
 Я – бот, который поможет Вам оценить риск инфицирования ВИЧ и понять, нужны ли услуги по профилактике ВИЧ.
-
-Для того чтобы продолжить, введите пожалуйста ваш УИК.
 """
 
 uik_info = """
+Для того чтобы продолжить, введите пожалуйста ваш УИК.
+
 Если у вас нет УИКа, его можно составить по следующим инструкциям:
 
 - Первые две буквы имени папы
@@ -51,9 +50,11 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
 
     else:
         try:
-            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+            try:
+                await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
-            postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
+            except MessageToDeleteNotFound:
+                pass
 
             async with state.proxy() as state_memory:
                 state_memory["data"].is_finished = False
@@ -70,17 +71,20 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
 @dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state: FSMContext):
     if not message.from_user.username:
+        await state.finish()
         empty_login_keyboard = InlineKeyboardMarkup().add(InlineKeyboardButton("Перейти", url=login_instruction_link))
         await message.answer(text=empty_login_text, reply_markup=empty_login_keyboard)
 
     else:
         await cancel_test_handler(message, state)
 
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-
         if not await postgres_manager.is_new_user(message.from_user):
-            await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+            if await postgres_manager.get_user_uik(user=message.from_user) is not None:
+                await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
+            else:
+                await message.answer(uik_info)
+                await StateGroup.in_uik.set()
         else:
             await message.answer(greeting_message)
             await message.answer(uik_info)
@@ -89,12 +93,18 @@ async def bot_start(message: types.Message, state: FSMContext):
 @dp.message_handler(state=StateGroup.in_uik)
 async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
-        postgres_manager = PostgresDataBaseManager(ConnectionConfig.get_postgres_connection_config())
-        await postgres_manager.add_user(message.from_user, uik=message.text)
+        try:
+            await postgres_manager.add_user(message.from_user, message.text)
+        except:
+            pass
+        user = await postgres_manager.get_user(message.from_user.id)
+
+        if user["uik"] is None:
+            await postgres_manager.update_user_uik(message.from_user, uik=message.text)
+
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")
-        user = await postgres_manager.get_user(user=message.from_user)
-        await postgres_manager.database_log(user=user[0][0], action="Успешно добавлен в базу!")
+        await postgres_manager.database_log(user=user["id"], action="Успешно добавлен в базу!")
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
         await state.finish()
