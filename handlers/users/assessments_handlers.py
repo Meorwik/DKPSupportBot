@@ -46,7 +46,6 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
 
     logging.info(f"Пользователь {call.from_user.id} начал тест: {database_data.test_name}")
     await postgres_manager.database_log(database_data.user_id, f"Начал тест: {database_data.test_name}")
-    del postgres_manager
 
     if call.data.startswith("ru"):
         database_data.language = 'ru'
