@@ -116,8 +116,9 @@ async def handle_tests_menu(message: types.Message):
     try:
         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
-    except:
+    except MessageToDeleteNotFound:
         pass
+
     await message.delete()
 
     choose_language_text = "Выберите язык, чтобы продолжить:"

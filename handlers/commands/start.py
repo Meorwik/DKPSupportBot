@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.default.default_keyboards import MenuKeyboardBuilder
+from aiogram.utils.exceptions import MessageToDeleteNotFound
 from aiogram.dispatcher.filters.builtin import CommandStart
 from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
@@ -49,7 +50,11 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
 
     else:
         try:
-            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+            try:
+                await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+
+            except MessageToDeleteNotFound:
+                pass
 
             async with state.proxy() as state_memory:
                 state_memory["data"].is_finished = False
