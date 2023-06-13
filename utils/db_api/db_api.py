@@ -257,5 +257,4 @@ class PostgresDataBaseManager(DataBaseManager):
     async def download_users_table(self):
         file_name = "users"
         users = await self.get_all_users()
-        print(users)
         return await DataConvertor().convert_to_exel(users, DB_USERS_COLUMNS, file_name)
