@@ -38,14 +38,18 @@ def filter_consultant_commands(message: types.Message):
 @dp.message_handler(filter_consultant_commands, state="*")
 async def handle_get_consult_role_command(message: types.Message, state: FSMContext):
     if message.text == ROLE_COMMANDS["consultant_on"]:
-        consult_menu_keyboard = MenuKeyboardBuilder().get_consultant_menu()
-        await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["consultant"])
-        await message.answer(greeting_consultant_message, reply_markup=ReplyKeyboardRemove())
-        await message.answer(consultant_instructions_message)
-        await message.answer(reply_instruction, reply_markup=consult_menu_keyboard)
+        if bool(await postgres_manager.get_current_consultant()):
+            consult_menu_keyboard = MenuKeyboardBuilder().get_consultant_menu()
+            await postgres_manager.change_user_role(user=message.from_user, new_role=ROLE_NAMES["consultant"])
+            await message.answer(greeting_consultant_message, reply_markup=ReplyKeyboardRemove())
+            await message.answer(consultant_instructions_message)
+            await message.answer(reply_instruction, reply_markup=consult_menu_keyboard)
 
-        await state.finish()
-        await RoleStates.is_consultant.set()
+            await state.finish()
+            await RoleStates.is_consultant.set()
+
+        else:
+            await message.answer("Уже имеется действующий консультант!")
 
     elif message.text == ROLE_COMMANDS["consultant_off"]:
         await postgres_manager.change_user_role(message.from_user, ROLE_NAMES["user"])
