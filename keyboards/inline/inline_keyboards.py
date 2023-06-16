@@ -1,3 +1,4 @@
+from data.tests.test_manager import WRONG_IMPOSSIBLE_ASSESSMENT_TYPE, WRONG_POSSIBLE_ASSESSMENT_TYPE
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram import types
 
@@ -10,6 +11,7 @@ class TestKeyboardBuilder:
 
     def __unpack_test_materials(self, test_materials):
         self.questions = test_materials["questions"]
+        self.assessment_type = test_materials["type"]
 
     def __create_keyboards(self):
         keyboards = {}
@@ -22,9 +24,24 @@ class TestKeyboardBuilder:
                     question["answers"].items()
                 ]
 
-            question_text = question["question_text"]
-            product = {"text": question_text, "keyboard": InlineKeyboardMarkup(row_width=1).add(*buttons)}
+            if self.assessment_type == WRONG_POSSIBLE_ASSESSMENT_TYPE:
+                question_text = question["question_text"]
+                question_wrong_answer_text = question["wrong_answer_case"]
+                product = {
+                    "text": question_text,
+                    "keyboard": InlineKeyboardMarkup(row_width=1).add(*buttons),
+                    "wrong_answer": question_wrong_answer_text
+                }
+
+            else:
+                question_text = question["question_text"]
+                product = {
+                    "text": question_text,
+                    "keyboard": InlineKeyboardMarkup(row_width=1).add(*buttons),
+                }
+
             keyboards[f"question_{question_number}"] = product
+
         return keyboards
 
     def get_keyboards(self, test_materials):

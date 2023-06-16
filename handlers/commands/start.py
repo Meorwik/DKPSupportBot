@@ -95,7 +95,7 @@ async def handle_uik(message: types.Message, state: FSMContext):
     if await is_valid_uik(message.text.lower()):
         if await postgres_manager.is_new_user(message.from_user):
             await postgres_manager.add_user(message.from_user, message.text)
-        
+
         user = await postgres_manager.get_user(message.from_user.id)
 
         if user["uik"] is None:

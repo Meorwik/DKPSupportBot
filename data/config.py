@@ -33,9 +33,6 @@ ROLES = {
 ROLE_COMMANDS = {
     "consultant_on": "!&consult",
     "consultant_off": "!&consultoff",
-
-    "admin_on": "",
-    "admin_off": ""
 }
 
 
