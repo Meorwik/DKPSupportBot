@@ -26,6 +26,8 @@ async def handle_back_button(message: types.Message):
 
 @dp.callback_query_handler(lambda callback: callback.data == 'menu')
 async def start_menu(callback_query: types.CallbackQuery):
+    with suppress(MessageToDeleteNotFound):
+        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id - 2)
     menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
     await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
     await callback_query.message.delete()

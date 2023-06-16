@@ -4,16 +4,18 @@ from data.tests.test_manager import \
     SogiAssessment, \
     HivKnowledgeAssessment, \
     PkpAssessment, \
-    UnderstandingPLHIVAssessment
+    UnderstandingPLHIVAssessment, \
+    WRONG_POSSIBLE_ASSESSMENT_TYPE, \
+    WRONG_IMPOSSIBLE_ASSESSMENT_TYPE
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, TestKeyboardBuilder
 from utils.test_results_tamplate import TestResults
 from aiogram.dispatcher import FSMContext
 from loader import dp, postgres_manager
 from utils.misc.logging import logging
 from states.states import StateGroup
+from contextlib import suppress
 from datetime import datetime
 from aiogram import types
-
 
 # ---------------------------TESTS HANDLERS-----------------------------------------------
 
@@ -70,12 +72,11 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     await call.message.answer(keyboards["question_1"]["text"], reply_markup=keyboards["question_1"]["keyboard"])
     await call.message.delete()
 
-async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, max_result, min_result, medium_result_min, medium_result_max):
+async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, assessment_type, max_result, min_result, medium_result_min, medium_result_max):
     async with state.proxy() as state_memory:
-        state_memory["score"] += int(call.data)
+        keyboards = state_memory["keyboards"]
         state_memory["question_number"] += 1
         score = state_memory["score"]
-        keyboards = state_memory["keyboards"]
         question_number = state_memory["question_number"]
         results = state_memory["results"]
         database_data = state_memory["data"]
@@ -101,6 +102,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
             database_data.result = 'small_result'
 
+
         await call.message.delete()
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
@@ -110,7 +112,22 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, m
         await postgres_manager.database_log(user['id'], action=f"Завершил тест {database_data['test_name']}!")
 
     else:
-        await call.message.edit_text\
+        if assessment_type == WRONG_POSSIBLE_ASSESSMENT_TYPE:
+            async with state.proxy() as state_memory:
+                with suppress(KeyError):
+                    if state_memory["msg"] is not None:
+                        await state_memory["msg"].delete()
+                        state_memory["msg"] = None
+
+                if int(call.data) == 1:
+                    state_memory["score"] += int(call.data)
+
+                else:
+                    state_memory["msg"] = await call.message.answer(keyboards[f"question_{question_number-1}"]["wrong_answer"])
+
+
+        await call.message.delete()
+        await call.message.answer\
             (
                 text=keyboards[f"question_{question_number}"]["text"],
                 reply_markup=keyboards[f"question_{question_number}"]["keyboard"]
@@ -121,37 +138,46 @@ async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContex
     async with state.proxy() as state_memory:
         test_name = state_memory["data"].test_name
 
+    # Есть 2 вида тестирования:
+    # Первый вид (WRONG_POSSIBLE) это тестирование предполагающее возможный неверный ответ, в случае которого нужно указать почему он неверный.
+    # Второй тип (WRONG_IMPOSSIBLE) это тестирование не допускающее возможного неверного ответа.
+
     if test_name == "hiv_risk_assessment":
         await handle_tests_callbacks(state, call,
                                      max_result=22,
                                      min_result=7,
                                      medium_result_min=7,
-                                     medium_result_max=21)
+                                     medium_result_max=21,
+                                     assessment_type=WRONG_IMPOSSIBLE_ASSESSMENT_TYPE)
 
     elif test_name == "sogi_assessment":
         await handle_tests_callbacks(state, call,
                                      max_result=17,
                                      min_result=9,
                                      medium_result_max=16,
-                                     medium_result_min=10)
+                                     medium_result_min=10,
+                                     assessment_type=WRONG_POSSIBLE_ASSESSMENT_TYPE)
 
     elif test_name == "pkp_assessment":
         await handle_tests_callbacks(state, call,
                                      max_result=8,
                                      min_result=3,
                                      medium_result_max=7,
-                                     medium_result_min=4)
+                                     medium_result_min=4,
+                                     assessment_type=WRONG_POSSIBLE_ASSESSMENT_TYPE)
 
     elif test_name == "hiv_knowledge_assessment":
         await handle_tests_callbacks(state, call,
                                      max_result=13,
                                      min_result=6,
                                      medium_result_max=12,
-                                     medium_result_min=7)
+                                     medium_result_min=7,
+                                     assessment_type=WRONG_POSSIBLE_ASSESSMENT_TYPE)
 
     elif test_name == "understanding_PLHIV_assessment":
         await handle_tests_callbacks(state, call,
                                      max_result=11,
                                      min_result=5,
                                      medium_result_max=10,
-                                     medium_result_min=6)
+                                     medium_result_min=6,
+                                     assessment_type=WRONG_POSSIBLE_ASSESSMENT_TYPE)
