@@ -73,7 +73,7 @@ async def handle_menu_buttons(message: types.Message):
         await sleep(delay=1.2)
         await msg.delete()
         await message.answer("""
-        Здравствуйте! Меня зовут Михаил. Готов ответить на Ваши вопросы.
+        Здравствуйте! Меня зовут Вильдамир. Готов ответить на Ваши вопросы.
         """, reply_markup=MenuKeyboardBuilder().get_end_conversation_keyboard())
         await StateGroup.in_consult.set()
 
