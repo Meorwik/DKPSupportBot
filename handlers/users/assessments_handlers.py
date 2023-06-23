@@ -72,6 +72,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     await call.message.answer(keyboards["question_1"]["text"], reply_markup=keyboards["question_1"]["keyboard"])
     await call.message.delete()
 
+
 async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, assessment_type, max_result, min_result, medium_result_min, medium_result_max):
     async with state.proxy() as state_memory:
         keyboards = state_memory["keyboards"]
@@ -132,6 +133,7 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, a
                 text=keyboards[f"question_{question_number}"]["text"],
                 reply_markup=keyboards[f"question_{question_number}"]["keyboard"]
             )
+
 
 @dp.callback_query_handler(state=StateGroup.in_test)
 async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContext):
