@@ -14,7 +14,8 @@ ADMINS = admins
 
 # consultant ID
 # 360178902
-CONSULTANT = 0
+CONSULTANT = 360178902
+
 
 def is_admin(user):
     return str(user.id) in ADMINS
