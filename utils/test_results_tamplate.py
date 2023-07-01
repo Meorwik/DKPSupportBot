@@ -3,6 +3,8 @@ from json import dumps, loads
 
 # КЛАСС: TestResults
 # Класс - форма, абстракция формы для добавления записи о прохождении того или иного теста в базу данных
+
+
 @dataclass
 class TestResults:
     user_id: int = None

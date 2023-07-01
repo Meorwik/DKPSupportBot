@@ -26,14 +26,17 @@ reply_instruction = """
 Чтобы сделать reply, смахните сообщение пациента влево.
 """
 
+
 # ----------------------------CONSULTANT SIDE-------------------
+
 def filter_consultant_commands(message: types.Message):
     if ROLE_COMMANDS["consultant_on"] == message.text:
         return True
     elif ROLE_COMMANDS["consultant_off"] == message.text:
         return True
-    else:
-        return False
+
+    return False
+
 
 @dp.message_handler(filter_consultant_commands, state="*")
 async def handle_get_consult_role_command(message: types.Message, state: FSMContext):
@@ -61,7 +64,7 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 async def handle_consultant_messages(message: types.Message):
     if message["reply_to_message"] is not None:
         start_index = message.reply_to_message.text.find("ID:") + len("ID:")
-        user_id = int(message.reply_to_message.text[start_index: ])
+        user_id = int(message.reply_to_message.text[start_index:])
         cut_off_index = message.reply_to_message.text.find("\nОт пациента\nУИК:")
 
         await bot.send_message(
@@ -73,7 +76,19 @@ async def handle_consultant_messages(message: types.Message):
         await message.answer(consultant_instructions_message)
         await message.answer(reply_instruction)
 
+
 # ----------------------CLIENT SIDE-------------------------
+async def rate_consultant(message: types.Message):
+    rate_consultant_keyboard = SimpleKeyboardBuilder.get_rate_consultant_keyboard()
+    rate_consultant_text = "Спасибо за обращение! Оцените, пожалуйста, работу консультанта."
+    await message.answer(rate_consultant_text, reply_markup=rate_consultant_keyboard)
+
+
+async def open_menu(message: types.Message):
+    await message.delete()
+    await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+
+
 async def get_current_consultant():
     consultant = await postgres_manager.get_current_consultant()
     if bool(consultant) is False:
@@ -82,6 +97,7 @@ async def get_current_consultant():
 
     else:
         return consultant["user_id"]
+
 
 async def send_message_to_consultant(message: types.Message):
     consultant = await get_current_consultant()
@@ -93,26 +109,35 @@ async def send_message_to_consultant(message: types.Message):
         chat_id=consultant
     )
 
+
 async def send_end_conversation_message_to_consultant(message: types.Message):
     consultant = await get_current_consultant()
     user_uik = await postgres_manager.get_user_uik(message.from_user)
-    quit_message = f"Пациент {user_uik}\n**Завершил общение!**"
+    quit_message = f"Пациент {user_uik}\nЗавершил общение!"
 
     await bot.send_message(
         text=quit_message,
-        chat_id=consultant,
-        parse_mode="Markdown"
+        chat_id=consultant
     )
 
-    await message.delete()
-    await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
 
 @dp.message_handler(state=StateGroup.in_consult)
 async def handle_consultant_conversation(message: types.Message, state: FSMContext):
     if message.text == BACK_BUTTONS_TEXTS['end_conversation']:
         await send_end_conversation_message_to_consultant(message)
+        if not await postgres_manager.is_consultant_rated(message.from_user):
+            await rate_consultant(message)
+
+        else:
+            await open_menu(message)
         await state.finish()
 
     else:
         await send_message_to_consultant(message)
+
+
+@dp.callback_query_handler(lambda call: "star_" in call.data)
+async def handle_consultant_rating(call: types.CallbackQuery):
+    await postgres_manager.rate_consultant(call.from_user, rate=int(call.data.replace("star_", "")))
+    await open_menu(call.message)
 

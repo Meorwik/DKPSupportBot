@@ -1,11 +1,12 @@
-from data.tests.test_manager import WRONG_IMPOSSIBLE_ASSESSMENT_TYPE, WRONG_POSSIBLE_ASSESSMENT_TYPE
+from data.assessments.assessments_manager import WRONG_POSSIBLE_ASSESSMENT_TYPE
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram import types
+import datetime
+
 
 # КЛАСС: TestKeyboardBuilder
 # Создан для создания клавиатур на основе которых будут работать тесты,
 # принимает на вход данные теста и возвращает список со всеми клавиатурами
-class TestKeyboardBuilder:
+class AssessmentKeyboardBuilder:
     def __init__(self):
         self.questions = None
 
@@ -49,61 +50,60 @@ class TestKeyboardBuilder:
 
         return self.__create_keyboards()
 
+
 # КЛАСС: SimpleKeyboardBuilder
 # Создан для работы с простыми клавиатурами и мелкими действиями.
 class SimpleKeyboardBuilder:
     @classmethod
     def get_social_networks_keyboard(cls):
-        facebook_button = InlineKeyboardButton("Перейти в Facebook",
-                                               "https://www.facebook.com/groups/communityfriendskz/")
+        facebook_button = InlineKeyboardButton(
+            "Перейти в Facebook",
+            "https://www.facebook.com/groups/communityfriendskz/"
+        )
 
-        instagram_button = InlineKeyboardButton("Перейти в Instagram", "https://instagram.com/community__friends")
+        instagram_button = InlineKeyboardButton(
+            "Перейти в Instagram",
+            "https://instagram.com/community__friends"
+        )
 
-        return {
-            "text": "Facebook и Instagram страница проекта",
-            "keyboard": InlineKeyboardMarkup(row_width=1).add(instagram_button, facebook_button)
-        }
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(instagram_button, facebook_button)
+
+        return keyboard
 
     @classmethod
     def get_project_news_keyboards(cls):
         first_button = InlineKeyboardButton("Перейти", "https://www.facebook.com/AMECAlmaty/posts/313432297466945")
+        second_button = InlineKeyboardButton(
+            text="Перейти",
+            url="https://www.the-village-kz.com/village/city/news-city/"
+                "19155-dokontaktnaya-profilaktika-novyy-sposob-profilak"
+                "tiki-vich-v-kazahstane"
+        )
 
-        second_button = InlineKeyboardButton\
-            (
-                text="Перейти",
-                url="https://www.the-village-kz.com/village/city/news-city/19155-dokontaktnaya-profilaktika-novyy-sposob-profilaktiki-vich-v-kazahstane"
-            )
+        first_keyboard = InlineKeyboardMarkup().add(first_button)
+        second_keyboard = InlineKeyboardMarkup().add(second_button)
 
-        first_product = {
-            "text": "О ВИЧ рассказывают подростки",
-            "keyboard": InlineKeyboardMarkup().add(first_button)
-        }
-
-        second_product = {
-            "text": "Доконтактная профилактика: Новый способ профилактики ВИЧ в Казахстане",
-            "keyboard": InlineKeyboardMarkup().add(second_button)
-        }
-
-        return first_product, second_product
+        return first_keyboard, second_keyboard
 
     @classmethod
     def get_tell_partner_keyboard(cls):
         tell_partner_button = InlineKeyboardButton("Перейти", "https://sms.icapapps.kz/ru/")
-        return {
-            "text": "Расскажите партнёру о важности тестирования анонимно 🙋‍♀",
-            "keyboard": InlineKeyboardMarkup().add(tell_partner_button)
-        }
+
+        keyboard = InlineKeyboardMarkup()
+        keyboard.add(tell_partner_button)
+
+        return keyboard
 
     @classmethod
     def get_language_selection_documents_keyboard(cls):
         send_kz_document = InlineKeyboardButton(text="Қазақша", callback_data="send_document_KZ")
         send_ru_document = InlineKeyboardButton(text="Русский", callback_data="send_document_RU")
-        ask_language = "Выберите язык, чтобы продолжить:"
 
-        return {
-            "text": ask_language,
-            "keyboard": InlineKeyboardMarkup(row_width=1).add(send_ru_document, send_kz_document)
-        }
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard.add(send_ru_document, send_kz_document)
+
+        return keyboard
 
     @classmethod
     def get_back_to_menu_keyboard(cls):
@@ -122,3 +122,180 @@ class SimpleKeyboardBuilder:
         error_button = InlineKeyboardButton("ОШИБКА!", callback_data="error")
         error_keyboard = InlineKeyboardMarkup(row_width=1).add(error_button)
         return error_keyboard
+
+    @classmethod
+    def get_rate_consultant_keyboard(cls):
+        star_emoji = "⭐️"
+
+        first_star_button = InlineKeyboardButton(star_emoji, callback_data="star_1")
+        second_star_button = InlineKeyboardButton(star_emoji, callback_data="star_2")
+        third_star_button = InlineKeyboardButton(star_emoji, callback_data="star_3")
+        fourth_star_button = InlineKeyboardButton(star_emoji, callback_data="star_4")
+        fifth_star_button = InlineKeyboardButton(star_emoji, callback_data="star_5")
+
+        rate_keyboard = InlineKeyboardMarkup(row_width=5)
+
+        rate_keyboard.add(
+            first_star_button,
+            second_star_button,
+            third_star_button,
+            fourth_star_button,
+            fifth_star_button
+        )
+
+        return rate_keyboard
+
+
+class PeriodSelector:
+    def __init__(self):
+        self.__MIN_YEAR = 2023
+        self.__MAX_YEAR = 2025
+        self.__MONTHS = {
+            "Январь": '01',
+            "Февраль": '02',
+            "Март": '03',
+            "Апрель": '04',
+            "Май": '05',
+            "Июнь": '06',
+            "Июль": '07',
+            "Август": '08',
+            "Сентябрь": '09',
+            "Октябрь": '10',
+            "Ноябрь": '11',
+            "Декабрь": '12'
+        }
+
+        self.__keyboard = InlineKeyboardMarkup(row_width=3)
+
+        self.__callback_prefixes = {
+            "[monthCallbacks]": "[monthCallbacks]",
+            "previous_year": "[backCallback]",
+            "next_year": "[forwardCallback]"
+        }
+
+        self.__month_buttons = None
+
+    @staticmethod
+    def __get_current_year(year):
+        if year is None:
+            return str(datetime.date.today().year)
+        else:
+            return year
+
+    def __add_season_buttons(self, first_month, second_month, third_month):
+        self.__keyboard.row(
+            self.__month_buttons[first_month],
+            self.__month_buttons[second_month],
+            self.__month_buttons[third_month]
+        )
+
+    def __create_months_buttons(self, year=None):
+        year = self.__get_current_year(year)
+
+        self.__month_buttons = {
+            month_callback: InlineKeyboardButton(
+                text=month_name,
+                callback_data=f"[monthCallbacks]:{year}-{month_callback}"
+            )
+            for month_name, month_callback
+            in
+            self.__MONTHS.items()
+        }
+
+        # WINTER
+        self.__add_season_buttons("12", "01", "02")
+        # SPRING
+        self.__add_season_buttons("03", "04", "05")
+        # SUMMER
+        self.__add_season_buttons("06", "07", "08")
+        # AUTUMN
+        self.__add_season_buttons("09", "10", "11")
+
+        return True
+
+    def __create_bottom_buttons(self, year=None):
+        go_back_button_text = "<<"
+        year = self.__get_current_year(year)
+        go_forward_button_text = ">>"
+
+        go_back_button_callback = f"[backCallback]:{year}:{go_back_button_text}"
+        current_year_button_callback = "None"
+        go_forward_button_callback = f"[forwardCallback]:{year}:{go_forward_button_text}"
+
+        go_back_button = InlineKeyboardButton(go_back_button_text, callback_data=go_back_button_callback)
+        current_year_button = InlineKeyboardButton(year, callback_data=current_year_button_callback)
+        go_forward_button = InlineKeyboardButton(go_forward_button_text, callback_data=go_forward_button_callback)
+
+        self.__keyboard.row(
+            go_back_button,
+            current_year_button,
+            go_forward_button
+        )
+
+        return True
+
+    @staticmethod
+    def get_callback_components(call):
+        callback_separator = ":"
+        callback_components = call.data.split(callback_separator)
+
+        if "[backCallback]" in callback_components:
+            callback_components = {
+                "callback_type": "[backCallback]",
+                "year": callback_components[1],
+                "button_text": callback_components[2]
+            }
+
+        elif "[forwardCallback]" in callback_components:
+            callback_components = {
+                "callback_type": "[forwardCallback]",
+                "year": callback_components[1],
+                "button_text": callback_components[2]
+            }
+
+        elif "[monthCallbacks]" in callback_components:
+            callback_components = {
+                "callback_type": "[monthCallbacks]",
+                "date": callback_components[1]
+            }
+
+        else:
+            callback_components = {
+                "None": None
+            }
+
+        return callback_components
+
+    @classmethod
+    def filter_callbacks(cls, call):
+        filter_storage = []
+        for i in cls().__callback_prefixes.values():
+            filter_storage.append(i in call.data)
+
+        return True in filter_storage
+
+    def get_next_year_keyboard(self, call):
+        callback_components = self.get_callback_components(call)
+        callback_year = int(callback_components["year"])
+
+        if self.__MAX_YEAR == callback_year:
+            return self.get_keyboard(self.__MAX_YEAR)
+
+        else:
+            return self.get_keyboard(str(callback_year + 1))
+
+    def get_previous_year_keyboard(self, call):
+        callback_components = self.get_callback_components(call)
+        callback_year = int(callback_components["year"])
+
+        if self.__MIN_YEAR == callback_year:
+            return self.get_keyboard(self.__MIN_YEAR)
+
+        else:
+            return self.get_keyboard(str(callback_year - 1))
+
+    def get_keyboard(self, year=None):
+        self.__create_months_buttons(year)
+        self.__create_bottom_buttons(year)
+
+        return self.__keyboard
