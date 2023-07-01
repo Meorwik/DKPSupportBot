@@ -1,5 +1,5 @@
-from data.tests.test_manager import \
-    TESTS_LANGUAGES_CALLBACKS, \
+from data.assessments.assessments_manager import \
+    ASSESSMENTS_LANGUAGES_CALLBACKS, \
     HivRiskAssessment, \
     SogiAssessment, \
     HivKnowledgeAssessment, \
@@ -7,7 +7,7 @@ from data.tests.test_manager import \
     UnderstandingPLHIVAssessment, \
     WRONG_POSSIBLE_ASSESSMENT_TYPE, \
     WRONG_IMPOSSIBLE_ASSESSMENT_TYPE
-from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, TestKeyboardBuilder
+from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, AssessmentKeyboardBuilder
 from utils.test_results_tamplate import TestResults
 from aiogram.dispatcher import FSMContext
 from loader import dp, postgres_manager
@@ -19,9 +19,10 @@ from aiogram import types
 
 # ---------------------------TESTS HANDLERS-----------------------------------------------
 
-@dp.callback_query_handler(lambda call: call.data in TESTS_LANGUAGES_CALLBACKS, state=StateGroup.in_test)
+
+@dp.callback_query_handler(lambda call: call.data in ASSESSMENTS_LANGUAGES_CALLBACKS, state=StateGroup.in_test)
 async def handle_language_selection(call: types.CallbackQuery, state: FSMContext):
-    test_keyboard_builder = TestKeyboardBuilder()
+    test_keyboard_builder = AssessmentKeyboardBuilder()
     database_data = TestResults()
     user = await postgres_manager.get_user(call.from_user.id)
     database_data.user_id = user["id"]
@@ -73,7 +74,12 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
     await call.message.delete()
 
 
-async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, assessment_type, max_result, min_result, medium_result_min, medium_result_max):
+async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery,
+                                 assessment_type: str,
+                                 max_result: int,
+                                 min_result: int,
+                                 medium_result_min: int,
+                                 medium_result_max: int):
     async with state.proxy() as state_memory:
         keyboards = state_memory["keyboards"]
         state_memory["question_number"] += 1
@@ -103,7 +109,6 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, a
             await call.message.answer(text=small_risk, reply_markup=back_to_menu)
             database_data.result = 'small_result'
 
-
         await call.message.delete()
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
@@ -124,12 +129,12 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery, a
                     state_memory["score"] += int(call.data)
 
                 else:
-                    state_memory["msg"] = await call.message.answer(keyboards[f"question_{question_number-1}"]["wrong_answer"])
-
+                    state_memory["msg"] = await call.message.answer(
+                        keyboards[f"question_{question_number-1}"]["wrong_answer"]
+                    )
 
         await call.message.delete()
-        await call.message.answer\
-            (
+        await call.message.answer(
                 text=keyboards[f"question_{question_number}"]["text"],
                 reply_markup=keyboards[f"question_{question_number}"]["keyboard"]
             )
@@ -141,7 +146,8 @@ async def handle_hiv_risk_assessment(call: types.CallbackQuery, state: FSMContex
         test_name = state_memory["data"].test_name
 
     # Есть 2 вида тестирования:
-    # Первый вид (WRONG_POSSIBLE) это тестирование предполагающее возможный неверный ответ, в случае которого нужно указать почему он неверный.
+    # Первый вид (WRONG_POSSIBLE) это тестирование предполагающее возможный неверный ответ,
+    # в случае которого нужно указать почему он неверный.
     # Второй тип (WRONG_IMPOSSIBLE) это тестирование не допускающее возможного неверного ответа.
 
     if test_name == "hiv_risk_assessment":

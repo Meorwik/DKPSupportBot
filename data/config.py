@@ -13,7 +13,8 @@ BOT_TOKEN = config_data["token"]
 ADMINS = admins
 
 # consultant ID
-CONSULTANT = 360178902
+# 360178902
+CONSULTANT = 0
 
 def is_admin(user):
     return str(user.id) in ADMINS
