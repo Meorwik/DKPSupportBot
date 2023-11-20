@@ -91,74 +91,34 @@ class AnalyticsManager:
         self.date = None
 
     async def __set_assessment_1_started_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_1_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_1_started = await self.current_db.get_assessment_started_statistic(assessment_name)
+        self.storage.assessment_1_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
 
     async def __set_assessment_2_started_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_2_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_2_started = await self.current_db.get_assessment_started_statistic(assessment_name)
+        self.storage.assessment_2_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
 
     async def __set_assessment_3_started_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_3_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_3_started = await self.current_db.get_assessment_started_statistic(assessment_name)
+        self.storage.assessment_3_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
 
     async def __set_assessment_4_started_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_4_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_4_started = await self.current_db.get_assessment_started_statistic(assessment_name)
+        self.storage.assessment_4_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
 
     async def __set_assessment_5_started_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_5_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_5_started = await self.current_db.get_assessment_started_statistic(assessment_name)
+        self.storage.assessment_5_started = await self.current_db.get_assessment_started_statistic(assessment_name, period)
 
     async def __set_assessment_1_finished_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_1_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_1_finished = await self.current_db.get_assessment_finished_statistic(assessment_name)
+        self.storage.assessment_1_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
 
     async def __set_assessment_2_finished_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_2_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_2_finished = await self.current_db.get_assessment_finished_statistic(assessment_name)
+        self.storage.assessment_2_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
 
     async def __set_assessment_3_finished_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_3_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_3_finished = await self.current_db.get_assessment_finished_statistic(assessment_name)
+        self.storage.assessment_3_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
 
     async def __set_assessment_4_finished_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_4_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_4_finished = await self.current_db.get_assessment_finished_statistic(assessment_name)
+        self.storage.assessment_4_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
 
     async def __set_assessment_5_finished_statistic(self, assessment_name, period=None):
-        if period is not None:
-            self.storage.assessment_5_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
-
-        else:
-            self.storage.assessment_5_finished = await self.current_db.get_assessment_finished_statistic(assessment_name)
+        self.storage.assessment_5_finished = await self.current_db.get_assessment_finished_statistic(assessment_name, period)
 
     async def __set_average_consultant_rating(self):
         self.storage.consultant_rating = await self.current_db.get_average_consultant_rating()

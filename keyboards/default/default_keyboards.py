@@ -25,6 +25,7 @@ MENU_BUTTONS_TEXTS = {
     "admin": "⚙️ Панель администратора",
     "order_vih_test": "💊 Заказать бесплатный тест на ВИЧ",
     "contacting_consultant": "👤 Обращение к консультанту",
+    "medication_schedule": "📖 Настроить напоминания приема препаратов",
     "rate_bot": '✨ Оценить бота',
 }
 
@@ -35,12 +36,18 @@ BACK_BUTTONS_TEXTS = {
 }
 
 
+MEDICATION_SCHEDULE_BUTTONS_TEXTS = {
+    "set_new_reminder": "⏰ Настроить новое напоминание",
+    "modify_reminder": "🛠 Настроить активные напоминания",
+    "delete_reminder": "❌ Удалить напоминание",
+}
+
+
 # КЛАСС: MenuKeyboardBuilder
 # Создан для работы с клавиатурами, создает клавиатуры для меню и его разделов.
 class MenuKeyboardBuilder:
     def __init__(self):
         self.__keyboard = ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
-        self.__buttons = []
 
     def __add_admin_menu(self):
         admin_button = KeyboardButton(MENU_BUTTONS_TEXTS["admin"])
@@ -58,13 +65,14 @@ class MenuKeyboardBuilder:
         info_button = KeyboardButton(MENU_BUTTONS_TEXTS["info"])
         order_vih_test_button = KeyboardButton(MENU_BUTTONS_TEXTS["order_vih_test"])
         consult_button = KeyboardButton(MENU_BUTTONS_TEXTS["contacting_consultant"])
+        medication_schedule = KeyboardButton(MENU_BUTTONS_TEXTS["medication_schedule"])
 
-        self.__keyboard.row(tests_button,info_button)
+        self.__keyboard.row(tests_button, info_button)
 
         if is_admin(user):
             self.__add_admin_menu()
 
-        self.__keyboard.add(order_vih_test_button, consult_button)
+        self.__keyboard.add(order_vih_test_button, consult_button, medication_schedule)
 
         return self.__keyboard
 
@@ -120,6 +128,10 @@ class MenuKeyboardBuilder:
 
         return self.__keyboard
 
+    def get_back_button_only(self):
+        self.__add_back_button()
+        return self.__keyboard
+
     def get_consultant_menu(self):
         self.__keyboard.clean()
         consult_off_button = KeyboardButton(ROLE_COMMANDS["consultant_off"])
@@ -130,3 +142,17 @@ class MenuKeyboardBuilder:
         self.__keyboard.clean()
         end_conversation_button = KeyboardButton(BACK_BUTTONS_TEXTS["end_conversation"])
         return self.__keyboard.add(end_conversation_button)
+
+    def get_medication_schedule_keyboard(self, registrations_count):
+        self.__keyboard.clean()
+        set_new_reminder = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["set_new_reminder"])
+        self.__keyboard.add(set_new_reminder)
+
+        if registrations_count > 0:
+            modify_reminder = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["modify_reminder"])
+            delete_reminder = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["delete_reminder"])
+            self.__keyboard.add(modify_reminder, delete_reminder)
+
+        self.__add_back_button()
+        return self.__keyboard
+

@@ -57,16 +57,7 @@ class DataBaseManager:
         self._cursor = None
 
     async def set_connection(self):
-        self._connection = connect\
-            (
-                f"""
-                    dbname={self.config['dbname']}
-                    user={self.config['user']}
-                    password={self.config['password']}
-                    host={self.config['host']}
-                    port={self.config['port']}
-                """
-            )
+        self._connection = connect(self.config)
         self._cursor = self._connection.cursor(cursor_factory=RealDictCursor)
         return self._connection
 
@@ -139,6 +130,25 @@ class PostgresDataBaseManager(DataBaseManager):
         self._connection.commit()
         await self.close_connection()
         return True
+
+    async def create_medication_schedule_table(self):
+        await self.set_connection()
+        create_medication_schedule_table_sql = """
+        CREATE TABLE IF NOT EXISTS medication_schedule (
+        "id" serial PRIMARY KEY,
+        "user_id" INT NOT NULL,
+        "drug_name" VARCHAR(50) NOT NULL,
+        "dose" VARCHAR(50) NOT NULL,
+        "time" VARCHAR(50) NOT NULL,
+        
+        CONSTRAINT FK_medication_schedule_users FOREIGN KEY(user_id)
+        REFERENCES users(id)
+        );
+        """
+
+        self._cursor.execute(create_medication_schedule_table_sql)
+        self._connection.commit()
+        await self.close_connection()
 
     # ------------ACTIONS WITH USERS-------------
 
@@ -250,7 +260,7 @@ class PostgresDataBaseManager(DataBaseManager):
 
     # ------------ACTIONS WITH LOGS----------------
 
-    async def database_log(self, user, action):
+    async def add_log(self, user, action):
         await self.set_connection()
 
         datetime_data = str(datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
@@ -278,7 +288,7 @@ class PostgresDataBaseManager(DataBaseManager):
 
     # ------------ACTIONS WITH TESTS---------------
 
-    async def add_new_test_results(self, test_result):
+    async def add_test_results(self, test_result):
         await self.set_connection()
 
         add_new_test_result_sql = f"""
@@ -428,3 +438,42 @@ class PostgresDataBaseManager(DataBaseManager):
         result = self._cursor.fetchone()
         await self.close_connection()
         return result["count"]
+
+# -------------------------------------- ACTIONS WITH MEDICATION SCHEDULE ------------------------
+    async def add_medication_schedule_reminder(self, user, drug_name, time, dose):
+        await self.set_connection()
+        add_registration_sql = f"""
+        INSERT INTO medication_schedule (user_id, drug_name, dose, time) 
+        VALUES ({user}, '{drug_name}', '{dose}', '{time}')
+        """
+        self._cursor.execute(add_registration_sql)
+        self._connection.commit()
+        await self.close_connection()
+
+    async def get_users_medication_schedule_reminders(self, user):
+        await self.set_connection()
+        get_users_registrations_sql = f"""
+        SELECT * FROM medication_schedule WHERE user_id = {user} 
+        """
+        self._cursor.execute(get_users_registrations_sql)
+        result = self._cursor.fetchall()
+        await self.close_connection()
+        return result
+
+    async def delete_medication_schedule_reminder(self, reminder_id, user_id):
+        await self.set_connection()
+        delete_medication_schedule_reminder_sql = f"""
+        DELETE FROM medication_schedule WHERE id = {reminder_id} AND user_id = {user_id}
+        """
+        self._cursor.execute(delete_medication_schedule_reminder_sql)
+        self._connection.commit()
+        await self.close_connection()
+
+    async def modify_medication_schedule_reminder(self, reminder_id, user_id, drug_name, dose, time):
+        await self.set_connection()
+        modify_medication_schedule_reminder_sql = f"""
+        UPDATE medication_schedule SET drug_name = '{drug_name}', dose = '{dose}', time = '{time}' WHERE id = {reminder_id} AND user_id = {user_id}
+        """
+        self._cursor.execute(modify_medication_schedule_reminder_sql)
+        self._connection.commit()
+        await self.close_connection()
