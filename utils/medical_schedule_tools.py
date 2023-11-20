@@ -4,7 +4,7 @@ from aiogram import types
 
 
 class Reminder:
-    def __init__(self, reminder_id, user_id, drug_name, dose, time):
+    def __init__(self, user_id, drug_name, dose, time, reminder_id=None):
         self.reminder_id = reminder_id
         self.user_id = user_id
         self.drug_name = drug_name

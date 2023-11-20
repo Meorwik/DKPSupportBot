@@ -4,7 +4,7 @@ from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, PeriodSelec
 from states.states import StateGroup, ReminderFillingForm, RemindModify, RemindDelete, ReminderStates
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageNotModified
-from utils.medical_schedule_tools import MedicalScheduleManager
+from utils.medical_schedule_tools import MedicalScheduleManager, Reminder
 from utils.product_analytics import AnalyticsManager
 from utils.medical_schedule_tools import Scheduler
 from utils.forms_templates import SetReminder
@@ -329,8 +329,12 @@ async def handle_reminder_set_drug_time(message: types.Message, state: FSMContex
         )
 
         user = await postgres_manager.get_user(message.from_user.id)
-        reminders = await postgres_manager.get_users_medication_schedule_reminders(user["id"])
-        await Scheduler().set_reminders(reminders, message)
+        await Scheduler().set_reminder(Reminder(
+            user_id=user["id"],
+            drug_name=reminder_form.drug_name,
+            dose=reminder_form.dose,
+            time=reminder_form.time
+        ), message)
 
         medical_schedule_manager = MedicalScheduleManager()
         message_to_show = f"Активные напоминания:\n{await medical_schedule_manager.get_user_reminders_info(user['id'])}"
