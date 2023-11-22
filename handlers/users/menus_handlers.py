@@ -270,7 +270,7 @@ async def handle_note_taking_medications(call: types.CallbackQuery):
     await call.answer("Записано ✅")
     await call.message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(call.from_user))
     text = call.message.text
-    drug_name = text[text.index("Примите") + len("Примите"): text.index("Доза")]
+    drug_name = text[text.index("Примите") + len("Примите")+1: text.index("Доза")]
     await call.message.delete()
     user = await postgres_manager.get_user(call.from_user.id)
     await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(KZ_TIMEZONE.localize(datetime.now()).strftime('%H:%H'))} - препарат принят ({drug_name})")
