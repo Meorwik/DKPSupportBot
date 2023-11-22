@@ -5,10 +5,10 @@ from states.states import StateGroup, ReminderFillingForm, RemindModify, RemindD
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageNotModified
 from utils.medical_schedule_tools import MedicalScheduleManager, Reminder
+from loader import dp, bot, postgres_manager, KZ_TIMEZONE
 from utils.product_analytics import AnalyticsManager
 from utils.medical_schedule_tools import Scheduler
 from utils.forms_templates import SetReminder
-from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from contextlib import suppress
@@ -273,7 +273,7 @@ async def handle_note_taking_medications(call: types.CallbackQuery):
     drug_name = text[text.index("Примите") + len("Примите"): text.index("Доза")]
     await call.message.delete()
     user = await postgres_manager.get_user(call.from_user.id)
-    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(datetime.now().strftime('%H:%H'))} - препарат принят ({drug_name})")
+    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(KZ_TIMEZONE.localize(datetime.now()).strftime('%H:%H'))} - препарат принят ({drug_name})")
 
 
 @dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderStates)
