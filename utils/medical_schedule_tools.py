@@ -1,10 +1,11 @@
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder
 from loader import postgres_manager, scheduler
+from .misc.logging import logger, INFO
 from aiogram import types
 
 
 class Reminder:
-    def __init__(self, user_id, drug_name, dose, time, reminder_id=None):
+    def __init__(self, user_id, drug_name, dose, time, reminder_id):
         self.reminder_id = reminder_id
         self.user_id = user_id
         self.drug_name = drug_name
@@ -50,6 +51,12 @@ class MedicalScheduleManager:
 
 class Scheduler:
 
+    async def clean_store(self):
+        scheduler.remove_all_jobs()
+
+    async def delete_reminder(self, reminder_id: int):
+        scheduler.get_job(reminder_id).remove()
+
     async def set_reminder(self, reminder, message):
         async def send_reminder():
             await message.answer(
@@ -57,7 +64,13 @@ class Scheduler:
                 reply_markup=SimpleKeyboardBuilder.get_note_taking_medications_keyboard()
             )
 
-        scheduler.add_job(send_reminder, trigger="cron", hour=reminder.hour, minute=reminder.minute)
+        scheduler.add_job(
+            func=send_reminder,
+            trigger="cron",
+            hour=reminder.hour,
+            minute=reminder.minute,
+            id=str(reminder.reminder_id)
+        )
 
     async def set_reminders(self, reminders: list, message: types.Message):
         reminders_objects = [Reminder(

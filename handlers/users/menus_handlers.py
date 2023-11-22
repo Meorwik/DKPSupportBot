@@ -313,6 +313,7 @@ async def handle_reminder_set_drug_time(message: types.Message, state: FSMContex
             )
 
         else:
+            await Scheduler().delete_reminder(reminder_id)
             await postgres_manager.modify_medication_schedule_reminder(
                 reminder_id,
                 user["id"],
@@ -333,7 +334,7 @@ async def handle_reminder_set_drug_time(message: types.Message, state: FSMContex
             user_id=user["id"],
             drug_name=reminder_form.drug_name,
             dose=reminder_form.dose,
-            time=reminder_form.time
+            time=reminder_form.time,
         ), message)
 
         medical_schedule_manager = MedicalScheduleManager()
@@ -378,6 +379,7 @@ async def handle_get_id_to_delete(message: types.Message, state: FSMContext):
             reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count),
             parse_mode=types.ParseMode.HTML
         )
+        await Scheduler().delete_reminder(message.text)
 
     else:
         await message.answer("Ошибка!\nПопробуйте снова")

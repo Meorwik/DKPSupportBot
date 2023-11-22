@@ -71,10 +71,12 @@ async def bot_start(message: types.Message, state: FSMContext):
 
     else:
         await cancel_test_handler(message, state)
+        scheduler = Scheduler()
 
         user = await postgres_manager.get_user(message.from_user.id)
         reminders = await postgres_manager.get_users_medication_schedule_reminders(user["id"])
-        await Scheduler().set_reminders(reminders, message)
+        await scheduler.clean_store()
+        await scheduler.set_reminders(reminders, message)
 
         if not await postgres_manager.is_new_user(message.from_user):
             if await postgres_manager.get_user_uik(user=message.from_user) is not None:
