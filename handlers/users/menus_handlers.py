@@ -271,7 +271,7 @@ async def handle_note_taking_medications(call: types.CallbackQuery):
     await call.message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(call.from_user))
     await call.message.delete()
     user = await postgres_manager.get_user(call.from_user.id)
-    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(datetime.now().time().strftime('%h:%m'))} - препарат принят ({call.data[call.data.index(':')+1: ]})")
+    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(datetime.now().strftime('%H:%H'))} - препарат принят ({call.data[call.data.index(':')+1: ]})")
 
 
 @dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderStates)
