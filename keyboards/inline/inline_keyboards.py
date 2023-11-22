@@ -2,7 +2,7 @@ from data.assessments.assessments_manager import WRONG_POSSIBLE_ASSESSMENT_TYPE
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import datetime
 
-MEDICAL_SCHEDULE_BUTTON_MATERIALS = {
+NOTE_TAKING_MEDS_BUTTON_MATERIALS = {
     "note_taking_medications": "Отметить прием препаратов"
 }
 
@@ -150,11 +150,11 @@ class SimpleKeyboardBuilder:
         return rate_keyboard
 
     @classmethod
-    def get_note_taking_medications_keyboard(cls):
+    def get_note_taking_medications_keyboard(cls, drug_name: str):
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(
-            text=MEDICAL_SCHEDULE_BUTTON_MATERIALS["note_taking_medications"],
-            callback_data="note_taking_medications"
+            text=NOTE_TAKING_MEDS_BUTTON_MATERIALS["note_taking_medications"],
+            callback_data=f"note_taking_medications:{drug_name}"
         ))
         return keyboard
 

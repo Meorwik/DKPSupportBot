@@ -1,6 +1,6 @@
 from keyboards.default.default_keyboards import MENU_BUTTONS_TEXTS, MenuKeyboardBuilder, \
     TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS, BACK_BUTTONS_TEXTS, MEDICATION_SCHEDULE_BUTTONS_TEXTS
-from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, PeriodSelector, MEDICAL_SCHEDULE_BUTTON_MATERIALS
+from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, PeriodSelector, NOTE_TAKING_MEDS_BUTTON_MATERIALS
 from states.states import StateGroup, ReminderFillingForm, RemindModify, RemindDelete, ReminderStates
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageNotModified
@@ -12,6 +12,7 @@ from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
 from contextlib import suppress
+from datetime import datetime
 from asyncio import sleep
 from aiogram import types
 import time
@@ -23,6 +24,10 @@ def is_time_format(arg):
         return True
     except ValueError:
         return False
+
+
+def filter_taking_meds_callbacks(call: types.CallbackQuery):
+    return "note_taking_medications" in call.data
 
 
 # ----------------------------BACK BUTTONS HANDLERS---------------------------------
@@ -252,12 +257,21 @@ async def handle_medication_schedule(message: types.Message):
         await message.answer("Введите номер записи")
         await RemindDelete.in_get_id.set()
 
+    elif message.text == MEDICATION_SCHEDULE_BUTTONS_TEXTS["get_reminders_history"]:
+        user = await postgres_manager.get_user(message.from_user.id)
+        await message.answer(
+            text=await AnalyticsManager().get_taking_meds_history_text(user["id"]),
+            reply_markup=MenuKeyboardBuilder().get_back_button_only()
+        )
 
-@dp.callback_query_handler(lambda call: call.data in MEDICAL_SCHEDULE_BUTTON_MATERIALS.keys())
+
+@dp.callback_query_handler(filter_taking_meds_callbacks)
 async def handle_note_taking_medications(call: types.CallbackQuery):
     await call.answer("Записано ✅")
     await call.message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(call.from_user))
     await call.message.delete()
+    user = await postgres_manager.get_user(call.from_user.id)
+    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(datetime.now().time().strftime('%h:%m'))} - препарат принят ({call.data[call.data.index(':')+1: ]})")
 
 
 @dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderStates)

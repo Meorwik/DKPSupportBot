@@ -477,3 +477,14 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(modify_medication_schedule_reminder_sql)
         self._connection.commit()
         await self.close_connection()
+
+    async def get_taking_meds_history(self, user_id):
+        await self.set_connection()
+        get_taking_meds_history_sql = f"""
+        SELECT * FROM logs WHERE user_id = {user_id} AND action LIKE '%препарат принят%'
+        """
+        self._cursor.execute(get_taking_meds_history_sql)
+        result = self._cursor.fetchall()
+        await self.close_connection()
+        return result
+

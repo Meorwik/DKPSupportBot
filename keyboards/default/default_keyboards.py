@@ -38,6 +38,7 @@ BACK_BUTTONS_TEXTS = {
 
 MEDICATION_SCHEDULE_BUTTONS_TEXTS = {
     "set_new_reminder": "⏰ Настроить новое напоминание",
+    "get_reminders_history": "📜 Посмотреть историю отмеченных напоминаний",
     "modify_reminder": "🛠 Настроить активные напоминания",
     "delete_reminder": "❌ Удалить напоминание",
 }
@@ -149,9 +150,10 @@ class MenuKeyboardBuilder:
         self.__keyboard.add(set_new_reminder)
 
         if registrations_count > 0:
+            reminders_history = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["get_reminders_history"])
             modify_reminder = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["modify_reminder"])
             delete_reminder = KeyboardButton(MEDICATION_SCHEDULE_BUTTONS_TEXTS["delete_reminder"])
-            self.__keyboard.add(modify_reminder, delete_reminder)
+            self.__keyboard.add(reminders_history, modify_reminder, delete_reminder)
 
         self.__add_back_button()
         return self.__keyboard
