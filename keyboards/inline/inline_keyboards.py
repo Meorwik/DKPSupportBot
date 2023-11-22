@@ -150,11 +150,11 @@ class SimpleKeyboardBuilder:
         return rate_keyboard
 
     @classmethod
-    def get_note_taking_medications_keyboard(cls, drug_name: str):
+    def get_note_taking_medications_keyboard(cls):
         keyboard = InlineKeyboardMarkup(row_width=1)
         keyboard.add(InlineKeyboardButton(
             text=NOTE_TAKING_MEDS_BUTTON_MATERIALS["note_taking_medications"],
-            callback_data=f"note_taking_medications:{drug_name}"
+            callback_data=f"note_taking_medications"
         ))
         return keyboard
 

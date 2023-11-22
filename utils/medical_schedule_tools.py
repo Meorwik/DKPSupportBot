@@ -63,7 +63,7 @@ class Scheduler:
         async def send_reminder():
             await message.answer(
                 text=await reminder.get_message(),
-                reply_markup=SimpleKeyboardBuilder.get_note_taking_medications_keyboard(reminder.drug_name)
+                reply_markup=SimpleKeyboardBuilder.get_note_taking_medications_keyboard()
             )
 
         scheduler.add_job(
