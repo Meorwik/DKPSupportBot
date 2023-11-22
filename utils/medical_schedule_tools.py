@@ -55,7 +55,9 @@ class Scheduler:
         scheduler.remove_all_jobs()
 
     async def delete_reminder(self, reminder_id: int):
-        scheduler.get_job(reminder_id).remove()
+        job_to_delete = scheduler.get_job(reminder_id)
+        if job_to_delete is not None:
+            job_to_delete.remove()
 
     async def set_reminder(self, reminder, message):
         async def send_reminder():
