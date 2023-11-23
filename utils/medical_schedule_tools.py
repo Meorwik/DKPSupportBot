@@ -66,12 +66,18 @@ class Scheduler:
                 reply_markup=SimpleKeyboardBuilder.get_note_taking_medications_keyboard()
             )
 
+        if reminder.reminder_id is not None:
+            job_id = reminder.reminder_id
+
+        else:
+            job_id = await postgres_manager.get_last_inserted_id("medication_schedule")
+
         scheduler.add_job(
             func=send_reminder,
             trigger="cron",
             hour=reminder.hour,
             minute=reminder.minute,
-            id=str(reminder.reminder_id)
+            id=str(job_id)
         )
 
     async def set_reminders(self, reminders: list, message: types.Message):

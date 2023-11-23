@@ -339,7 +339,7 @@ async def handle_reminder_set_drug_time(message: types.Message, state: FSMContex
             )
 
         users_registrations_count = await MedicalScheduleManager().get_users_reminders_count(user["id"])
-
+        await state.finish()
         await message.answer(
             text="Напоминание установлено !",
             reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count)
@@ -361,8 +361,6 @@ async def handle_reminder_set_drug_time(message: types.Message, state: FSMContex
             reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count),
             parse_mode=types.ParseMode.HTML
         )
-
-        await state.finish()
 
     else:
         format_warning = "Обратите внимание, формат вводимого времени должен быть примерно таким:\n\n12:40\n16:30\n21:02\n\nЧас : Минуты\nНикак иначе!"

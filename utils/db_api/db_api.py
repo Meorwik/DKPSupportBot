@@ -488,3 +488,12 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.close_connection()
         return result
 
+    async def get_last_inserted_id(self, table_name):
+        await self.set_connection()
+        get_last_inserted_id_sql = f"""
+        SELECT MAX(id) FROM {table_name}     
+        """
+        self._cursor.execute(get_last_inserted_id_sql)
+        result = self._cursor.fetchone()
+        await self.close_connection()
+        return int(result["max"])
