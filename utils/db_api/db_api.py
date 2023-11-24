@@ -170,7 +170,6 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(sql_add_user)
         self._connection.commit()
         await self.close_connection()
-        await self.download_users_table()
         return True
 
     async def update_user_uik(self, user, uik):
@@ -271,7 +270,6 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(database_log_sql)
         self._connection.commit()
         await self.close_connection()
-        await self.download_logs_table()
         return True
 
     async def get_all_logs(self):
@@ -309,7 +307,6 @@ class PostgresDataBaseManager(DataBaseManager):
         self._cursor.execute(add_new_test_result_sql)
         self._connection.commit()
         await self.close_connection()
-        await self.download_tests_table()
         return True
 
     async def get_all_tests_results(self):
@@ -325,16 +322,6 @@ class PostgresDataBaseManager(DataBaseManager):
         return result
 
     # ---------------DOWNLOAD TABLES----------------
-
-    async def download_logs_table(self):
-        file_name = "logs"
-        logs = await self.get_all_logs()
-        return await DataConvertor().convert_to_exel(values=logs, columns=DB_LOGS_COLUMNS, file_name=file_name)
-
-    async def download_tests_table(self):
-        file_name = "tests"
-        tests = await self.get_all_tests_results()
-        return await DataConvertor().convert_to_exel(values=tests, columns=DB_TESTS_COLUMNS, file_name=file_name)
 
     async def download_users_table(self):
         file_name = "users"
