@@ -8,7 +8,7 @@ from data.assessments.assessments_manager import \
     WRONG_POSSIBLE_ASSESSMENT_TYPE, \
     WRONG_IMPOSSIBLE_ASSESSMENT_TYPE
 from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, AssessmentKeyboardBuilder
-from utils.test_results_tamplate import TestResults
+from utils.forms_templates import TestResults
 from aiogram.dispatcher import FSMContext
 from loader import dp, postgres_manager
 from utils.misc.logging import logging
@@ -48,7 +48,7 @@ async def handle_language_selection(call: types.CallbackQuery, state: FSMContext
         assessment = UnderstandingPLHIVAssessment()
 
     logging.info(f"Пользователь {call.from_user.id} начал тест: {database_data.test_name}")
-    await postgres_manager.database_log(database_data.user_id, f"Начал тест: {database_data.test_name}")
+    await postgres_manager.add_log(database_data.user_id, f"Начал тест: {database_data.test_name}")
 
     if call.data.startswith("ru"):
         database_data.language = 'ru'
@@ -112,10 +112,10 @@ async def handle_tests_callbacks(state: FSMContext, call: types.CallbackQuery,
         await call.message.delete()
         database_data.datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
         database_data = database_data.to_dict()
-        await postgres_manager.add_new_test_results(database_data)
+        await postgres_manager.add_test_results(database_data)
         logging.info(f"Пользователь {call.from_user.id} успешно завершил тест {database_data['test_name']}!")
         user = await postgres_manager.get_user(call.from_user.id)
-        await postgres_manager.database_log(user['id'], action=f"Завершил тест {database_data['test_name']}!")
+        await postgres_manager.add_log(user['id'], action=f"Завершил тест {database_data['test_name']}!")
 
     else:
         if assessment_type == WRONG_POSSIBLE_ASSESSMENT_TYPE:
