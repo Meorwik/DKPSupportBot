@@ -20,7 +20,7 @@ class Reminder:
 
 class MedicalScheduleManager:
     __MEDICAL_REGISTRATION_INFO_TEMPLATE = \
-        "<b>Номер записи:</b> <i>{id}</i>\n<b>Препарат:</b> <i>{drug_name}</i>\n<b>Доза:</b> <i>{dose}</i>\n<b>Когда:</b> <i>{time}</i>\n\n"
+        "<b>Номер записи:</b> <i>{id}</i>\n\n<b>Препарат:</b> <i>{drug_name}</i>\n<b>Доза:</b> <i>{dose}</i>\n<b>Когда:</b> <i>{time}</i>\n\n"
     __MEDICAL_REGISTRATIONS_EMPTY_CASE = "<b>Отсутствуют</b>"
 
     async def get_users_reminders_count(self, user):

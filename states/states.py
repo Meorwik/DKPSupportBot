@@ -27,3 +27,7 @@ class RemindModify(ReminderStates):
 
 class RemindDelete(ReminderStates):
     in_get_id = State()
+
+
+class ReminderHistory(ReminderStates):
+    in_history = State()

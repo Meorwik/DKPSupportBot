@@ -137,7 +137,7 @@ class PostgresDataBaseManager(DataBaseManager):
         CREATE TABLE IF NOT EXISTS medication_schedule (
         "id" serial PRIMARY KEY,
         "user_id" INT NOT NULL,
-        "drug_name" VARCHAR(50) NOT NULL,
+        "drug_name" VARCHAR(150) NOT NULL,
         "dose" VARCHAR(50) NOT NULL,
         "time" VARCHAR(50) NOT NULL,
         
