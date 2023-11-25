@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from keyboards.default.default_keyboards import MenuKeyboardBuilder
 from aiogram.utils.exceptions import MessageToDeleteNotFound
 from aiogram.dispatcher.filters.builtin import CommandStart
+from utils.medical_schedule_tools import Scheduler
 from loader import dp, bot, postgres_manager
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
@@ -55,7 +56,7 @@ async def cancel_test_handler(message: types.Message, state: FSMContext):
                 state_memory["data"].is_finished = False
                 state_memory["data"].datetime = f"{datetime.today().strftime('%d/%m/%Y')}"
                 state_memory["data"] = state_memory["data"].to_dict()
-                await postgres_manager.add_new_test_results(state_memory["data"])
+                await postgres_manager.add_test_results(state_memory["data"])
 
         await state.finish()
         await message.delete()
@@ -70,6 +71,12 @@ async def bot_start(message: types.Message, state: FSMContext):
 
     else:
         await cancel_test_handler(message, state)
+        scheduler = Scheduler()
+
+        user = await postgres_manager.get_user(message.from_user.id)
+        reminders = await postgres_manager.get_users_medication_schedule_reminders(user["id"])
+        await scheduler.clean_store()
+        await scheduler.set_reminders(reminders, message)
 
         if not await postgres_manager.is_new_user(message.from_user):
             if await postgres_manager.get_user_uik(user=message.from_user) is not None:
@@ -96,7 +103,7 @@ async def handle_uik(message: types.Message, state: FSMContext):
             await postgres_manager.update_user_uik(message.from_user, uik=message.text)
 
         logging.info(f"Пользователь {message.from_user.id} успешно добавлен в базу!")
-        await postgres_manager.database_log(user=user["id"], action="Успешно добавлен в базу!")
+        await postgres_manager.add_log(user=user["id"], action="Успешно добавлен в базу!")
 
         await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
         await state.finish()

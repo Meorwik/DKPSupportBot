@@ -1,15 +1,33 @@
 from keyboards.default.default_keyboards import MENU_BUTTONS_TEXTS, MenuKeyboardBuilder, \
-    TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS, BACK_BUTTONS_TEXTS
+    TESTS_BUTTONS_TEXTS, ADMIN_BUTTONS_TEXTS, INFO_BUTTONS_TEXTS, BACK_BUTTONS_TEXTS, MEDICATION_SCHEDULE_BUTTONS_TEXTS
+from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, PeriodSelector, NOTE_TAKING_MEDS_BUTTON_MATERIALS
+from states.states import StateGroup, ReminderFillingForm, RemindModify, RemindDelete, ReminderHistory
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
-from keyboards.inline.inline_keyboards import SimpleKeyboardBuilder, PeriodSelector
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageNotModified
+from utils.medical_schedule_tools import MedicalScheduleManager, Reminder
+from loader import dp, bot, postgres_manager, KZ_TIMEZONE
 from utils.product_analytics import AnalyticsManager
-from loader import dp, bot, postgres_manager
+from utils.medical_schedule_tools import Scheduler
+from utils.forms_templates import SetReminder
+from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
-from states.states import StateGroup
 from contextlib import suppress
+from datetime import datetime
 from asyncio import sleep
 from aiogram import types
+import time
+
+
+def is_time_format(arg):
+    try:
+        time.strptime(arg, '%H:%M')
+        return True
+    except ValueError:
+        return False
+
+
+def filter_taking_meds_callbacks(call: types.CallbackQuery):
+    return "note_taking_medications" in call.data
 
 
 # ----------------------------BACK BUTTONS HANDLERS---------------------------------
@@ -43,6 +61,7 @@ async def start_menu(callback_query: types.CallbackQuery):
 @dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
 async def handle_menu_buttons(message: types.Message):
     user = await postgres_manager.get_user(message.from_user.id)
+    menu_keyboard_builder = MenuKeyboardBuilder()
 
     async def delete_past_messages(msg: types.Message):
         with suppress(MessageToDeleteNotFound):
@@ -51,26 +70,26 @@ async def handle_menu_buttons(message: types.Message):
 
     if message.text == MENU_BUTTONS_TEXTS["tests"]:
         await delete_past_messages(message)
-        await message.answer("Меню тестов", reply_markup=MenuKeyboardBuilder().get_tests_menu_keyboard())
+        await message.answer("Меню тестов", reply_markup=menu_keyboard_builder.get_tests_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["info"]:
         await delete_past_messages(message)
-        await message.answer("Меню информации", reply_markup=MenuKeyboardBuilder().get_info_menu_keyboard())
+        await message.answer("Меню информации", reply_markup=menu_keyboard_builder.get_info_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["admin"]:
         await delete_past_messages(message)
-        await message.answer("Меню администратора", reply_markup=MenuKeyboardBuilder().get_admin_menu_keyboard())
+        await message.answer("Меню администратора", reply_markup=menu_keyboard_builder.get_admin_menu_keyboard())
 
     elif message.text == MENU_BUTTONS_TEXTS["order_vih_test"]:
         logging.info(f"Пользователь {message.from_user.id} Попытался заказать тест на ВИЧ!")
-        await postgres_manager.database_log(user=user["id"], action="Попытался заказать тест на ВИЧ!")
+        await postgres_manager.add_log(user=user["id"], action="Попытался заказать тест на ВИЧ!")
 
         btn = InlineKeyboardButton("Перейти", url="https://hivtest.kz/")
         await message.answer('Заказать бесплатный тест', reply_markup=InlineKeyboardMarkup().add(btn))
 
     elif message.text == MENU_BUTTONS_TEXTS["contacting_consultant"]:
         logging.info(f"Пользователь {message.from_user.id} начал взаимодействие с консультантом!")
-        await postgres_manager.database_log(user=user["id"], action="Начал взаимодействие с консультантом!")
+        await postgres_manager.add_log(user=user["id"], action="Начал взаимодействие с консультантом!")
 
         msg = await message.answer("Консультант подключается...", reply_markup=ReplyKeyboardRemove())
         await sleep(delay=1.2)
@@ -79,6 +98,19 @@ async def handle_menu_buttons(message: types.Message):
         Здравствуйте! Меня зовут Вильдамир. Готов ответить на Ваши вопросы.
         """, reply_markup=MenuKeyboardBuilder().get_end_conversation_keyboard())
         await StateGroup.in_consult.set()
+
+    elif message.text == MENU_BUTTONS_TEXTS["medication_schedule"]:
+        await delete_past_messages(message)
+
+        medical_schedule_manager = MedicalScheduleManager()
+        message_to_show = f"Активные напоминания:\n\n{await medical_schedule_manager.get_user_reminders_info(user['id'])}"
+
+        users_registrations_count = await medical_schedule_manager.get_users_reminders_count(user["id"])
+        await message.answer(
+            text=message_to_show,
+            reply_markup=menu_keyboard_builder.get_medication_schedule_keyboard(users_registrations_count),
+            parse_mode=types.ParseMode.HTML
+        )
 
 
 # ------------------------------HANDLE ADMIN MENU----------------------------------------------
@@ -154,7 +186,7 @@ async def handle_info_menu(message: types.Message):
 
     elif message.text == INFO_BUTTONS_TEXTS["tell_partner"]:
         logging.info(f"Пользователь {message.from_user.id} рассказал партнеру о важности тестирования")
-        await postgres_manager.database_log(user=user["id"], action="Рассказал партнеру о важности тестирования")
+        await postgres_manager.add_log(user=user["id"], action="Рассказал партнеру о важности тестирования")
         keyboard = SimpleKeyboardBuilder.get_tell_partner_keyboard()
         await message.answer(tell_your_partner_text, reply_markup=keyboard)
 
@@ -207,4 +239,193 @@ async def handle_tests_menu(message: types.Message):
         reply_markup=language_select_keyboard
     )
     await StateGroup.in_test.set()
+
+
+# ---------------------------------- HANDLE MEDICAL SCHEDULE MENU -----------------------------------------
+
+async def open_reminders_menu(message: types.Message, state: FSMContext):
+    await state.finish()
+    medical_schedule_manager = MedicalScheduleManager()
+    user = await postgres_manager.get_user(message.from_user.id)
+    menu_keyboard_builder = MenuKeyboardBuilder()
+    message_to_show = f"Активные напоминания:\n\n{await medical_schedule_manager.get_user_reminders_info(user['id'])}"
+
+    users_registrations_count = await medical_schedule_manager.get_users_reminders_count(user["id"])
+    await message.answer(
+        text=message_to_show,
+        reply_markup=menu_keyboard_builder.get_medication_schedule_keyboard(users_registrations_count),
+        parse_mode=types.ParseMode.HTML
+    )
+
+@dp.message_handler(lambda message: message.text in MEDICATION_SCHEDULE_BUTTONS_TEXTS.values())
+async def handle_medication_schedule(message: types.Message):
+    menu_keyboard_builder = MenuKeyboardBuilder()
+
+    if message.text == MEDICATION_SCHEDULE_BUTTONS_TEXTS["set_new_reminder"]:
+        await message.answer("Введите название препарата:", reply_markup=menu_keyboard_builder.get_back_button_only())
+        await ReminderFillingForm.in_drug_name.set()
+
+    elif message.text == MEDICATION_SCHEDULE_BUTTONS_TEXTS["modify_reminder"]:
+        await message.answer("Введите номер записи", reply_markup=menu_keyboard_builder.get_back_button_only())
+        await RemindModify.in_get_id.set()
+
+    elif message.text == MEDICATION_SCHEDULE_BUTTONS_TEXTS["delete_reminder"]:
+        await message.answer("Введите номер записи", reply_markup=menu_keyboard_builder.get_back_button_only())
+        await RemindDelete.in_get_id.set()
+
+    elif message.text == MEDICATION_SCHEDULE_BUTTONS_TEXTS["get_reminders_history"]:
+        await ReminderHistory.in_history.set()
+        user = await postgres_manager.get_user(message.from_user.id)
+        await message.answer(
+            text=await AnalyticsManager().get_taking_meds_history_text(user["id"]),
+            reply_markup=MenuKeyboardBuilder().get_back_button_only()
+        )
+
+
+@dp.callback_query_handler(lambda call: call.data in NOTE_TAKING_MEDS_BUTTON_MATERIALS.keys())
+async def handle_note_taking_medications(call: types.CallbackQuery):
+    await call.answer("Записано ✅")
+    await call.message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(call.from_user))
+    text = call.message.text
+    drug_name = text[text.index("Примите") + len("Примите")+1: text.index("Доза")]
+    await call.message.delete()
+    user = await postgres_manager.get_user(call.from_user.id)
+    await postgres_manager.add_log(user["id"], f"{str(datetime.now().date())} | {str(KZ_TIMEZONE.localize(datetime.now()).strftime('%H:%H'))} - препарат принят ({drug_name})")
+
+
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderFillingForm)
+async def handle_back_button(message: types.Message, state: FSMContext):
+    await open_reminders_menu(message, state)
+
+
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderHistory)
+async def handle_back_button(message: types.Message, state: FSMContext):
+    await open_reminders_menu(message, state)
+
+
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=RemindDelete)
+async def handle_back_button(message: types.Message, state: FSMContext):
+    await open_reminders_menu(message, state)
+
+
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS["back_to_menu"], state=RemindModify)
+async def handle_back_button(message: types.Message, state: FSMContext):
+    await open_reminders_menu(message, state)
+
+
+@dp.message_handler(lambda msg: msg.text != BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderFillingForm.in_drug_name)
+async def handle_reminder_set_drug_name(message: types.Message, state: FSMContext):
+    reminder_form = SetReminder()
+    reminder_form.drug_name = message.text
+
+    async with state.proxy() as data:
+        data["reminder_form"] = reminder_form
+
+    await message.answer("Введите необходимую дозировку препарата в граммах или миллиграммах (например, 0.5 гр или 400 мг):")
+    await state.set_state(ReminderFillingForm.in_dose)
+
+
+@dp.message_handler(lambda msg: msg.text != BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderFillingForm.in_dose)
+async def handle_reminder_set_drug_dose(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        reminder_form = data["reminder_form"]
+        reminder_form.dose = message.text
+        data["reminder_form"] = reminder_form
+
+    format_warning = "Обратите внимание, формат вводимого времени должен быть следующим:\n\n12:40\n16:30\n09:45\n\nЧас : Минуты"
+    await message.answer("Введите время приема препарата:")
+    await message.answer(format_warning)
+    await state.set_state(ReminderFillingForm.in_time)
+
+
+@dp.message_handler(lambda msg: msg.text != BACK_BUTTONS_TEXTS["back_to_menu"], state=ReminderFillingForm.in_time)
+async def handle_reminder_set_drug_time(message: types.Message, state: FSMContext):
+    if is_time_format(message.text):
+        reminder_id = None
+        async with state.proxy() as data:
+            if "reminder_id" in data:
+                if data["reminder_id"] is not None:
+                    reminder_id = data["reminder_id"]
+
+            reminder_form = data["reminder_form"]
+            reminder_form.time = message.text
+            data["reminder_form"] = reminder_form
+
+        user = await postgres_manager.get_user(message.from_user.id)
+        if reminder_id is None:
+            await postgres_manager.add_medication_schedule_reminder(
+                user["id"],
+                reminder_form.drug_name,
+                reminder_form.time, reminder_form.dose
+            )
+
+        else:
+            await Scheduler().delete_reminder(reminder_id)
+            await postgres_manager.modify_medication_schedule_reminder(
+                reminder_id,
+                user["id"],
+                reminder_form.drug_name,
+                reminder_form.dose,
+                reminder_form.time
+            )
+
+        users_registrations_count = await MedicalScheduleManager().get_users_reminders_count(user["id"])
+        await state.finish()
+        await message.answer(
+            text="Напоминание установлено !",
+            reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count)
+        )
+
+        user = await postgres_manager.get_user(message.from_user.id)
+        await Scheduler().set_reminder(Reminder(
+            user_id=user["id"],
+            drug_name=reminder_form.drug_name,
+            dose=reminder_form.dose,
+            time=reminder_form.time,
+        ), message)
+
+        medical_schedule_manager = MedicalScheduleManager()
+        message_to_show = f"Активные напоминания:\n{await medical_schedule_manager.get_user_reminders_info(user['id'])}"
+        users_registrations_count = await medical_schedule_manager.get_users_reminders_count(user["id"])
+        await message.answer(
+            text=message_to_show,
+            reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count),
+            parse_mode=types.ParseMode.HTML
+        )
+
+    else:
+        format_warning = "Обратите внимание, формат вводимого времени должен быть примерно таким:\n\n12:40\n16:30\n21:02\n\nЧас : Минуты\nНикак иначе!"
+        await message.answer(format_warning)
+        await message.answer("Попробуйте еще раз!")
+
+
+@dp.message_handler(lambda msg: msg.text != BACK_BUTTONS_TEXTS["back_to_menu"], state=RemindModify.in_get_id)
+async def handle_get_id_to_modify(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        with suppress(ValueError):
+            data["reminder_id"] = int(message.text)
+
+    await message.answer("Введите название препарата:", reply_markup=MenuKeyboardBuilder().get_back_button_only())
+    await state.set_state(ReminderFillingForm.in_drug_name)
+
+
+@dp.message_handler(lambda msg: msg.text != BACK_BUTTONS_TEXTS["back_to_menu"], state=RemindDelete.in_get_id)
+async def handle_get_id_to_delete(message: types.Message, state: FSMContext):
+    if message.text.isnumeric():
+        user = await postgres_manager.get_user(message.from_user.id)
+        await postgres_manager.delete_medication_schedule_reminder(int(message.text), user["id"])
+        await state.finish()
+
+        medical_schedule_manager = MedicalScheduleManager()
+        message_to_show = f"Активные напоминания:\n{await medical_schedule_manager.get_user_reminders_info(user['id'])}"
+        users_registrations_count = await medical_schedule_manager.get_users_reminders_count(user["id"])
+        await message.answer(
+            text=message_to_show,
+            reply_markup=MenuKeyboardBuilder().get_medication_schedule_keyboard(users_registrations_count),
+            parse_mode=types.ParseMode.HTML
+        )
+        await Scheduler().delete_reminder(message.text)
+
+    else:
+        await message.answer("Ошибка!\nПопробуйте снова")
 

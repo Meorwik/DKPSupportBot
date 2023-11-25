@@ -7,4 +7,5 @@ logging.basicConfig(
 )
 
 
-
+INFO = logging.INFO
+logger = logging.Logger("logger")
