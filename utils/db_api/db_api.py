@@ -38,7 +38,7 @@ DB_LOGS_COLUMNS = [
 # Создан для конвертации и загрузки данных в файлы
 class DataConvertor:
     async def convert_to_exel(self, values, columns, file_name):
-        file_path = f"data/database_backup/{file_name}.xlsx"
+        file_path = f"data/{file_name}.xlsx"
         try:
             data_frame = DataFrame(values, columns=columns)
             data_frame.to_excel(file_path)
