@@ -59,6 +59,14 @@ class AssessmentKeyboardBuilder:
 # Создан для работы с простыми клавиатурами и мелкими действиями.
 class SimpleKeyboardBuilder:
     @classmethod
+    def get_confirmation_keyboard(cls):
+        return InlineKeyboardMarkup(row_width=1).add(
+            InlineKeyboardButton("✅ Да, уверен(а)", callback_data="newsletter_is_ok"),
+            InlineKeyboardButton("❌ Нет, отмена", callback_data="newsletter_is_not_ok")
+        )
+
+
+    @classmethod
     def get_social_networks_keyboard(cls):
         facebook_button = InlineKeyboardButton(
             "Перейти в Facebook",

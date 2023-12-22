@@ -5,6 +5,8 @@ class StateGroup(StatesGroup):
     in_test = State()
     in_uik = State()
     in_consult = State()
+    in_create_newsletter = State()
+    in_confirm_newsletter = State()
 
 
 class RoleStates(StatesGroup):
