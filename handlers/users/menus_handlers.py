@@ -5,9 +5,11 @@ from states.states import StateGroup, ReminderFillingForm, RemindModify, RemindD
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardRemove
 from aiogram.utils.exceptions import MessageToDeleteNotFound, MessageNotModified
 from utils.medical_schedule_tools import MedicalScheduleManager, Reminder
+from aiogram.utils.exceptions import ChatNotFound, BotBlocked
 from loader import dp, bot, postgres_manager, KZ_TIMEZONE
 from utils.product_analytics import AnalyticsManager
 from utils.medical_schedule_tools import Scheduler
+from aiogram.types.input_media import InputMedia
 from utils.forms_templates import SetReminder
 from aiogram.dispatcher import FSMContext
 from utils.misc.logging import logging
@@ -30,36 +32,7 @@ def filter_taking_meds_callbacks(call: types.CallbackQuery):
     return "note_taking_medications" in call.data
 
 
-# ----------------------------BACK BUTTONS HANDLERS---------------------------------
-@dp.callback_query_handler(lambda call: call.data == "error")
-async def handle_error_situation(callback: types.CallbackQuery):
-    await callback.message.delete()
-    logging.info(f"Пользователь {callback.from_user.id} получил ошибку!!!")
-    await start_menu(callback)
-
-
-@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS.values())
-async def handle_back_button(message: types.Message):
-    if message.text == BACK_BUTTONS_TEXTS["back_to_menu"]:
-        await message.delete()
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
-        await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
-
-
-@dp.callback_query_handler(lambda callback: callback.data == 'menu')
-async def start_menu(callback_query: types.CallbackQuery):
-    with suppress(MessageToDeleteNotFound):
-        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id - 2)
-
-    menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
-    await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
-    await callback_query.message.delete()
-
-# ------------------------------HANDLE MAIN MENU----------------------------------------------
-
-
-@dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
-async def handle_menu_buttons(message: types.Message):
+async def open_main_menu(message: types.Message):
     user = await postgres_manager.get_user(message.from_user.id)
     menu_keyboard_builder = MenuKeyboardBuilder()
 
@@ -95,8 +68,8 @@ async def handle_menu_buttons(message: types.Message):
         await sleep(delay=1.2)
         await msg.delete()
         await message.answer("""
-        Здравствуйте! Меня зовут Вильдамир. Готов ответить на Ваши вопросы.
-        """, reply_markup=MenuKeyboardBuilder().get_end_conversation_keyboard())
+            Здравствуйте! Меня зовут Вильдамир. Готов ответить на Ваши вопросы.
+            """, reply_markup=MenuKeyboardBuilder().get_end_conversation_keyboard())
         await StateGroup.in_consult.set()
 
     elif message.text == MENU_BUTTONS_TEXTS["medication_schedule"]:
@@ -113,10 +86,7 @@ async def handle_menu_buttons(message: types.Message):
         )
 
 
-# ------------------------------HANDLE ADMIN MENU----------------------------------------------
-
-@dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())
-async def handle_admin_menu(message: types.Message):
+async def open_admin_menu(message: types.Message):
     analytics_manager = AnalyticsManager()
     choose_month_text = "Выберите месяц:"
 
@@ -136,6 +106,115 @@ async def handle_admin_menu(message: types.Message):
         analytics = await analytics_manager.get_analytics_results()
         await msg.delete()
         await message.answer(analytics, "MARKDOWN")
+
+    elif message.text == ADMIN_BUTTONS_TEXTS["create_newsletter"]:
+        await StateGroup.in_create_newsletter.set()
+        await message.answer("Напишите ваше сообщение:", reply_markup=MenuKeyboardBuilder().get_back_button_only())
+
+
+# ----------------------------BACK BUTTONS HANDLERS---------------------------------
+@dp.callback_query_handler(lambda call: call.data == "error")
+async def handle_error_situation(callback: types.CallbackQuery):
+    await callback.message.delete()
+    logging.info(f"Пользователь {callback.from_user.id} получил ошибку!!!")
+    await start_menu(callback)
+
+
+@dp.message_handler(lambda message: message.text in BACK_BUTTONS_TEXTS.values())
+async def handle_back_button(message: types.Message):
+    if message.text == BACK_BUTTONS_TEXTS["back_to_menu"]:
+        await message.delete()
+        with suppress(MessageToDeleteNotFound):
+            await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+        await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+
+
+@dp.callback_query_handler(lambda callback: callback.data == 'menu')
+async def start_menu(callback_query: types.CallbackQuery):
+    with suppress(MessageToDeleteNotFound):
+        await bot.delete_message(chat_id=callback_query.from_user.id, message_id=callback_query.message.message_id - 2)
+
+    menu_keyboard = MenuKeyboardBuilder().get_main_menu_keyboard(callback_query.from_user)
+    await callback_query.message.answer('Меню', reply_markup=menu_keyboard)
+    await callback_query.message.delete()
+
+# ------------------------------HANDLE MAIN MENU----------------------------------------------
+
+
+@dp.message_handler(lambda message: message.text in MENU_BUTTONS_TEXTS.values())
+async def handle_menu_buttons(message: types.Message):
+    await open_main_menu(message)
+
+
+# ------------------------------HANDLE ADMIN MENU----------------------------------------------
+@dp.message_handler(lambda message: message.text in ADMIN_BUTTONS_TEXTS.values())
+async def handle_admin_menu(message: types.Message):
+    await open_admin_menu(message)
+
+
+@dp.message_handler(state=StateGroup.in_create_newsletter, content_types="any")
+async def handle_create_newsletter(message: types.Message, state: FSMContext):
+    if message.text == BACK_BUTTONS_TEXTS['back_to_menu']:
+        await state.finish()
+        await message.answer("Меню", reply_markup=MenuKeyboardBuilder().get_main_menu_keyboard(message.from_user))
+
+    else:
+        async with state.proxy() as data:
+            data['newsletter'] = message
+
+        await message.answer(
+            text="Вы уверены что хотите разослать это сообщение всем пользователям?",
+            reply_markup=SimpleKeyboardBuilder.get_confirmation_keyboard()
+        )
+        await StateGroup.in_confirm_newsletter.set()
+
+
+@dp.callback_query_handler(state=StateGroup.in_confirm_newsletter)
+async def handle_confirm_newsletter(call: types.CallbackQuery, state: FSMContext):
+    if call.data == "newsletter_is_ok":
+        users = await postgres_manager.get_all_users()
+        async with state.proxy() as data:
+            message_to_send: types.Message = data['newsletter']
+        try:
+            if message_to_send.content_type == "text":
+                for user in users:
+                    await bot.send_message(user['user_id'], message_to_send.text)
+
+            elif message_to_send.content_type == "audio":
+                for user in users:
+                    await bot.send_audio(user['user_id'], message_to_send.audio.file_id, caption=message_to_send.caption)
+
+            elif message_to_send.content_type == "document":
+                for user in users:
+                    await bot.send_document(user['user_id'], message_to_send.document.file_id, caption=message_to_send.caption)
+
+            elif message_to_send.content_type == "photo":
+                for user in users:
+                    await bot.send_photo(user['user_id'], message_to_send.photo[0].file_id, caption=message_to_send.caption)
+
+            elif message_to_send.content_type == "video":
+                for user in users:
+                    await bot.send_video(user['user_id'], message_to_send.video.file_id, caption=message_to_send.caption)
+
+            elif message_to_send.content_type == "video_note":
+                for user in users:
+                    await bot.send_video_note(user['user_id'], message_to_send.video_note.file_id)
+
+            elif message_to_send.content_type == "voice":
+                await message_to_send.answer_voice(message_to_send.voice.file_id)
+
+            await call.message.edit_text("Готово ", reply_markup=None)
+        except ChatNotFound:
+            pass
+
+        except BotBlocked:
+            pass
+
+    elif call.data == "newsletter_is_not_ok":
+        await call.message.answer("Прочесс был отменен", reply_markup=MenuKeyboardBuilder().get_back_button_only())
+
+    await state.finish()
+    await call.message.delete()
 
 
 @dp.callback_query_handler(lambda call: PeriodSelector.filter_callbacks(call))
@@ -256,6 +335,7 @@ async def open_reminders_menu(message: types.Message, state: FSMContext):
         reply_markup=menu_keyboard_builder.get_medication_schedule_keyboard(users_registrations_count),
         parse_mode=types.ParseMode.HTML
     )
+
 
 @dp.message_handler(lambda message: message.text in MEDICATION_SCHEDULE_BUTTONS_TEXTS.values())
 async def handle_medication_schedule(message: types.Message):

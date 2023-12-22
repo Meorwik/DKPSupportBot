@@ -426,7 +426,22 @@ class PostgresDataBaseManager(DataBaseManager):
         await self.close_connection()
         return result["count"]
 
-# -------------------------------------- ACTIONS WITH MEDICATION SCHEDULE ------------------------
+    async def get_reminders_history(self, period):
+        await self.set_connection()
+        separator = "-"
+        period = period.split(separator)
+        period = f"{period[1]}/{period[0]}"
+        sql = f"""
+        SELECT COUNT(action)
+        FROM logs WHERE action LIKE '%препарат принят%'
+        AND datetime LIKE '%{period}%'
+        """
+        self._cursor.execute(sql)
+        result = self._cursor.fetchone()
+        await self.close_connection()
+        return result['count']
+
+    # -------------------------------------- ACTIONS WITH MEDICATION SCHEDULE ------------------------
     async def add_medication_schedule_reminder(self, user, drug_name, time, dose):
         await self.set_connection()
         add_registration_sql = f"""
@@ -484,3 +499,4 @@ class PostgresDataBaseManager(DataBaseManager):
         result = self._cursor.fetchone()
         await self.close_connection()
         return int(result["max"])
+

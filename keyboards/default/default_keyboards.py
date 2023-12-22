@@ -15,8 +15,9 @@ INFO_BUTTONS_TEXTS = {
 
 ADMIN_BUTTONS_TEXTS = {
     "get_users": "Получить базу пользователей",
-    "get_period_analytics": f"Аналитика за период",
-    "get_all_analytics": f"Общая аналитика"
+    "get_period_analytics": "Аналитика за период",
+    "get_all_analytics": "Общая аналитика",
+    "create_newsletter": "Создать рассылку"
 }
 
 MENU_BUTTONS_TEXTS = {
@@ -100,10 +101,12 @@ class MenuKeyboardBuilder:
         get_all_users_button = KeyboardButton(ADMIN_BUTTONS_TEXTS["get_users"])
         get_period_analytics_button = KeyboardButton(ADMIN_BUTTONS_TEXTS["get_period_analytics"])
         get_common_analytics_button = KeyboardButton(ADMIN_BUTTONS_TEXTS["get_all_analytics"])
+        create_newsletter = KeyboardButton(ADMIN_BUTTONS_TEXTS["create_newsletter"])
 
         self.__keyboard.clean()
         self.__keyboard.add(
             get_all_users_button,
+            create_newsletter,
             get_period_analytics_button,
             get_common_analytics_button
         )

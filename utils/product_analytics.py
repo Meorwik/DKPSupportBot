@@ -11,6 +11,7 @@ ADDITIONAL_INFO_MONTH = """
 *В этом месяце:*
 --  Присоединилось {users_in_month} чел
 --  Обратились к консультанту {people_consultant} чел
+--  Использовали напоминания {people_used_reminders} чел
 """
 
 ASSESSMENTS_NUMBERS = {f"assessment_{key + 1}": value for key, value in enumerate(ASSESSMENTS_NAMES.keys())}
@@ -80,6 +81,7 @@ class AnalyticsStorage:
         self.consultant_rating = None
         self.users_in_month = None
         self.people_consultant = None
+        self.people_used_reminders = None
 
 
 # КЛАСС AnalyticsManager
@@ -102,10 +104,14 @@ class AnalyticsManager:
     async def __set_users_count_contacted_consultant_in_period(self, period):
         self.storage.people_consultant = await self.current_db.get_count_contacted_consultant(period)
 
-    async def __set_additional_info_month(self, users_in_month, people_consultant):
+    async def __set_users_used_reminders(self, period):
+        self.storage.people_used_reminders = await self.current_db.get_reminders_history(period)
+
+    async def __set_additional_info_month(self, users_in_month, people_consultant, users_used_reminders):
         self.storage.additional_info = ADDITIONAL_INFO_MONTH.format(
             users_in_month=users_in_month,
-            people_consultant=people_consultant
+            people_consultant=people_consultant,
+            people_used_reminders=users_used_reminders
         )
 
     async def analyze_all(self):
@@ -143,7 +149,12 @@ class AnalyticsManager:
 
         await self.__set_users_count_contacted_consultant_in_period(period)
         await self.__set_new_registered_users_count(period)
-        await self.__set_additional_info_month(self.storage.users_in_month, self.storage.people_consultant)
+        await self.__set_users_used_reminders(period)
+        await self.__set_additional_info_month(
+            self.storage.users_in_month,
+            self.storage.people_consultant,
+            self.storage.people_used_reminders
+        )
 
         self.storage.assessment_1_started = await self.current_db.get_assessment_started_statistic(
             ASSESSMENTS_NUMBERS["assessment_1"], period)
