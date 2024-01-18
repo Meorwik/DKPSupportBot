@@ -62,10 +62,14 @@ async def handle_get_consult_role_command(message: types.Message, state: FSMCont
 
 @dp.message_handler(state=RoleStates.is_consultant)
 async def handle_consultant_messages(message: types.Message):
+    print('handle_consultant_messages started')
+    print(message["reply_to_message"])
     if message["reply_to_message"] is not None:
         start_index = message.reply_to_message.text.find("ID:") + len("ID:")
         user_id = int(message.reply_to_message.text[start_index:])
         cut_off_index = message.reply_to_message.text.find("\nОт пациента\nУИК:")
+        print(f'send to {user_id}. Message: {message.text}')
+        print(f'send from {message.reply_to_message.text[:cut_off_index]}')
 
         await bot.send_message(
             chat_id=user_id,
