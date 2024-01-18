@@ -226,7 +226,7 @@ class PostgresDataBaseManager(DataBaseManager):
 
     async def is_new_user(self, user):
         user_data = await self.get_user(user.id)
-        return not user_data
+        return not bool(user_data)
 
     async def get_user_uik(self, user):
         user_data = await self.get_user(user.id)
